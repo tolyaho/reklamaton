@@ -24,7 +24,7 @@ class UserRead(UserCreate):
 
 class AvatarCreate(BaseModel):
     name: str
-    url: str
+    url: str | None = None
     personality: str | None = None
     features: str | None = None
     age: int | None = None
@@ -40,6 +40,8 @@ class AvatarRead(AvatarCreate):
     is_system: bool
     created_at: datetime
     prompt: str
+    image_url: Optional[str]
+    image_status: str
 
     class Config:
         from_attributes = True
@@ -69,7 +71,7 @@ class MessageRead(BaseModel):
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    username: str
+    username: str = Field(index=True, sa_column_kwargs={"unique": True})
     age: Optional[int] = None
     sex: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -81,7 +83,7 @@ class User(SQLModel, table=True):
 class Avatar(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    url: str
+    url: Optional[str] = Field(default=None)
     personality: str
     features: str
     age: int
@@ -92,6 +94,10 @@ class Avatar(SQLModel, table=True):
 
     owner_id: Optional[int] = Field(default=None, foreign_key="user.id")
     owner: Optional[User] = Relationship(back_populates="avatars")
+
+    image_url: Optional[str] = Field(default=None, index=True)
+    image_status: str = Field(default="pending")  # pending | ready | failed
+    image_prompt: Optional[str] = None
 
     chats: List["ChatSession"] = Relationship(back_populates="avatar")
     created_at: datetime = Field(default_factory=datetime.utcnow)

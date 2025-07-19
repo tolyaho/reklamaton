@@ -1,9 +1,13 @@
 # main.py (relevant parts)
 
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import create_engine, SQLModel, Session, select
 from sqlalchemy import or_
+
+from fastapi.staticfiles import StaticFiles
+import os
+import requests
 
 from seed import seed_system_avatars
 
@@ -17,7 +21,11 @@ from models import (
 from store import create_chat_session, get_chat_session, add_message
 from assistant_api import create_new_thread, assistant_chat_sync, assistant_chat_stream
 
-from prompter import build_avatar_prompt
+from prompter import build_avatar_prompt, build_image_prompt
+
+from image_gen import FusionBrainAPI
+
+os.makedirs("static/avatars", exist_ok=True)
 
 app = FastAPI()
 app.add_middleware(
@@ -29,18 +37,89 @@ app.add_middleware(
 )
 engine = create_engine(DATABASE_URL, echo=True)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+FUSION_BASE = os.getenv("FUSION_BASE", "https://api-key.fusionbrain.ai/")
+FUSION_KEY = os.getenv("FUSION_API_KEY")
+FUSION_SECRET = os.getenv("FUSION_SECRET_KEY")
+
+client_fusion = FusionBrainAPI(FUSION_BASE, FUSION_KEY, FUSION_SECRET)
+pipeline_id    = client_fusion.get_pipeline()
+
+from fastapi import BackgroundTasks
+
+
+def generate_avatar_image_async(avatar_id: int, image_prompt: str):
+    """Background: generate + save + update DB."""
+    out_prefix = f"static/avatars/avatar_{avatar_id}"
+    try:
+        uuid    = fusion_client.generate(image_prompt, pipeline_id)
+        files   = fusion_client.check_generation(uuid)
+        if not files:
+            raise RuntimeError("No files returned")
+        fusion_client.save_images(files, out_prefix)
+        # update DB record
+        with Session(engine) as s:
+            av = s.get(Avatar, avatar_id)
+            av.image_url    = f"/static/avatars/avatar_{avatar_id}_1.png"
+            av.image_status = "ready"
+            s.add(av)
+            s.commit()
+    except Exception as e:
+        with Session(engine) as s:
+            av = s.get(Avatar, avatar_id)
+            av.image_status = "failed"
+            s.add(av)
+            s.commit()
+        print("Avatar generation failed:", e)
+
+
+@app.get("/avatars/{avatar_id}/", response_model=AvatarRead)
+def get_avatar(avatar_id: int, session: Session = Depends(get_session)):
+    av = session.get(Avatar, avatar_id)
+    if not av:
+        raise HTTPException(404, "Avatar not found")
+    return av
+
+
+def queue_system_avatar_generation():
+    print("[INIT] queue_system_avatar_generation start")
+    with Session(engine) as s:
+        pending = s.exec(
+            select(Avatar).where(
+                Avatar.is_system == True,
+                Avatar.image_status == "pending"
+            )
+        ).all()
+        print(f"[INIT] system pending avatars: {[a.id for a in pending]}")
+        ...
+
 
 @app.on_event("startup")
 def on_startup():
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         seed_system_avatars(session)
+    global fusion_client
+    # Инициализируем только если ключи заданы
+    if FUSION_KEY and FUSION_SECRET:
+        fusion_client = FusionBrainAPI(FUSION_BASE, FUSION_KEY, FUSION_SECRET)
+        print("FusionBrain client initialized")
+    else:
+        print("FusionBrain keys not set — image generation disabled")
+    queue_system_avatar_generation()
 
 
 # ---------- Users ----------
 @app.post("/users/", response_model=UserRead, status_code=201)
-def create_user(user_in: UserCreate, session: Session = Depends(get_session)):
-    user = User(**user_in.dict())
+def create_or_get_user(user_in: UserCreate, session: Session = Depends(get_session)):
+    # пробуем найти по username (вы используете email как username)
+    stmt = select(User).where(User.username == user_in.username)
+    existing = session.exec(stmt).first()
+    if existing:
+        return existing
+
+    user = User(username=user_in.username, age=user_in.age, sex=user_in.sex)
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -57,27 +136,38 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
 
 # ---------- Avatars ----------
 @app.post("/users/{user_id}/avatars/", response_model=AvatarRead, status_code=201)
-def create_avatar(user_id: int, avatar_in: AvatarCreate, session: Session = Depends(get_session)):
-    if not session.get(User, user_id):
+def create_avatar(
+        user_id: int,
+        avatar_in: AvatarCreate,
+        background: BackgroundTasks,
+        session: Session = Depends(get_session)
+):
+    user = session.get(User, user_id)
+    if not user:
         raise HTTPException(404, "User not found")
-    if avatar_in.prompt:
-        prompt = avatar_in.prompt
-    else:
-        prompt = build_avatar_prompt(avatar_in)  # handle None fields gracefully
+
+    # Текстовый prompt (личность)
+    persona_prompt = build_avatar_prompt(avatar_in)
+    image_prompt = build_image_prompt(avatar_in)
     avatar = Avatar(
         name=avatar_in.name,
-        url=avatar_in.url,
-        personality=avatar_in.personality or "",
-        features=avatar_in.features or "",
-        age=avatar_in.age or 0,
-        gender=avatar_in.gender or "",
-        hobbies=avatar_in.hobbies or "",
-        prompt=prompt,
-        owner_id=user_id
+        personality=avatar_in.personality,
+        features=avatar_in.features,
+        age=avatar_in.age,
+        gender=avatar_in.gender,
+        hobbies=avatar_in.hobbies,
+        prompt=persona_prompt,
+        owner_id=user_id,
+        image_prompt=image_prompt,
+        image_status="pending",
+        image_url=None
     )
     session.add(avatar)
     session.commit()
     session.refresh(avatar)
+
+    # **this** launches your working code in background:
+    background.add_task(generate_avatar_image_async, avatar.id, image_prompt)
     return avatar
 
 
@@ -87,6 +177,14 @@ def list_avatars(user_id: int, session: Session = Depends(get_session)):
         or_(Avatar.is_system == True, Avatar.owner_id == user_id)
     )
     return session.exec(stmt).all()
+
+
+@app.get("/avatars/{avatar_id}/", response_model=AvatarRead)
+def get_avatar(avatar_id: int, session: Session = Depends(get_session)):
+    av = session.get(Avatar, avatar_id)
+    if not av:
+        raise HTTPException(404, "Avatar not found")
+    return av
 
 
 # ---------- Chats ----------
