@@ -3,5 +3,5 @@ uvicorn[standard]==0.29.0
 pydantic==2.6.3
 openai>=1.15.0
 python-dotenv==1.0.1
-sqlmodel==0.1.7
+sqlmodel==0.0.24
 sqlalchemy>=2.0
