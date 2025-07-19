@@ -9,3 +9,4 @@ uvicorn main:app --reload
 ```
 
 ## my-app folder - frontend part
+To run, use npm. 
