@@ -9,4 +9,20 @@ uvicorn main:app --reload
 ```
 
 ## my-app folder - frontend part
-To run, use npm. 
+
+Изначально нужно установить node
+
+```
+brew install node
+```
+
+Также нужно
+
+'''
+npm install
+'''
+
+Запускать из папки my-app
+```
+npm run dev
+```
