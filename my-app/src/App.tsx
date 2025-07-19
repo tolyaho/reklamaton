@@ -46,12 +46,13 @@ declare global {
 interface Character {
   id: number;
   name: string;
-  avatar: string;
+  imageUrl: string | null;
   personality: string;
   features: string;
   age: number;
   gender: string;
   hobbies: string;
+  imageStatus?: "pending" | "ready" | "failed";
 }
 interface Message {
   id: number;
@@ -81,7 +82,7 @@ const initialCharacters: Character[] = [
   {
     id: 1,
     name: "Алиса",
-    avatar: "https://i.pravatar.cc/150?img=12",
+    imageUrl: "https://i.pravatar.cc/150?img=12",
     personality: "Добрая и любознательная",
     features: "Всегда отвечает вопросом на вопрос",
     age: 23,
@@ -91,7 +92,7 @@ const initialCharacters: Character[] = [
   {
     id: 2,
     name: "Борис",
-    avatar: "https://i.pravatar.cc/150?img=20",
+    imageUrl: "https://i.pravatar.cc/150?img=20",
     personality: "Саркастичный и остроумный",
     features: "Любит шутить",
     age: 31,
@@ -157,6 +158,14 @@ export default function App() {
     return null;
   });
 
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+
+  function toAbsolute(url?: string | null) {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    return API_BASE.replace(/\/$/, "") + url;  // url уже начинается с /
+  }
+
   useEffect(() => {
     if (!userProfile?.backendId) return;
   
@@ -168,12 +177,13 @@ export default function App() {
         setCharacters(arr.map(a => ({
           id: a.id,
           name: a.name,
-          avatar: a.url,
-          personality: a.personality,
-          features: a.features,
-          age: a.age,
-          gender: a.gender,
-          hobbies: a.hobbies,
+          imageUrl: toAbsolute(a.image_url),
+          personality: a.personality ?? "",
+          features: a.features ?? "",
+          age: a.age ?? 0,
+          gender: a.gender ?? "",
+          hobbies: a.hobbies ?? "",
+          imageStatus: a.image_status
         })));
       })
       .catch(console.error);
@@ -207,6 +217,12 @@ export default function App() {
       setMessages(hydrated);
     });
   }, [selectedChatId]);
+
+  useEffect(() => {
+    if (chats.length && selectedChatId == null) {
+      setSelectedChatId(chats[0].id);
+    }
+  }, [chats, selectedChatId]);
 
   const [isChooseCharacterOpen, setIsChooseCharacterOpen] = useState(false);
   const [isNewCharacterOpen, setIsNewCharacterOpen] = useState(false);
@@ -242,16 +258,13 @@ export default function App() {
   }, []);
 
   // state формы создания персонажа
-  const [newCharForm, setNewCharForm] = useState<
-    Omit<Character, "id">
-  >({
+  const [newCharForm, setNewCharForm] = useState({
     name: "",
-    avatar: "https://i.pravatar.cc/150?img=64",
     personality: "",
     features: "",
     age: 18,
     gender: "",
-    hobbies: "",
+    hobbies: ""
   });
 
   const tokenClientRef = useRef<any>(null);
@@ -351,6 +364,7 @@ export default function App() {
     setChats([]);
     setSelectedChatId(null);
     setMessages([]);
+    localStorage.removeItem("userProfile");
   };
 
   const handleChooseCharacterForChat = async (character: Character) => {
@@ -410,7 +424,6 @@ export default function App() {
       // 🚀 Call backend to create the avatar
       const created = await createAvatar(userProfile.backendId, {
         name:        newCharForm.name,
-        url:         newCharForm.avatar,
         personality: newCharForm.personality,
         features:    newCharForm.features,
         age:         newCharForm.age,
@@ -418,25 +431,66 @@ export default function App() {
         hobbies:     newCharForm.hobbies,
       });
       // Map backend Avatar → our Character shape
-      setCharacters((prev) => [
-        ...prev,
-        {
-          id:          created.id,
-          name:        created.name,
-          avatar:      created.url,
-          personality: created.personality,
-          features:    created.features,
-          age:         created.age,
-          gender:      created.gender,
-          hobbies:     created.hobbies,
-        },
-      ]);
+          setCharacters(prev => [
+              ...prev,
+              {
+                id:          created.id,
+                name:        created.name,
+                imageUrl:      created.image_url || null,
+                personality: created.personality,
+                features:    created.features,
+                age:         created.age,
+                gender:      created.gender,
+                hobbies:     created.hobbies,
+                imageStatus:      created.image_status, // "pending"
+              }
+            ]);
+
+      pollAvatar(created.id);
+      setNewCharForm({
+        name: "",
+        personality: "",
+        features: "",
+        age: 18,
+        gender: "",
+        hobbies: ""
+      });
       setIsNewCharacterOpen(false);
     } catch (err) {
       console.error("Failed to create avatar:", err);
       alert("Не удалось создать персонажа.");
     }
   };
+
+  async function pollAvatar(avatarId: number, attempts = 20, delayMs = 3000) {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          // Предполагается эндпоинт: GET /avatars/{avatar_id}/
+          const res = await fetch(`${import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000"}/avatars/${avatarId}/`);
+          if (!res.ok) throw new Error(await res.text());
+          const data = await res.json(); // тот же shape что и createAvatar response
+    
+          if (data.image_status === "ready" || data.image_status === "failed") {
+            setCharacters(prev =>
+              prev.map(c =>
+                c.id === avatarId
+                  ? {
+                      ...c,
+                      imageUrl: toAbsolute(data.image_url) || c.imageUrl,
+                      imageStatus: data.image_status
+                    }
+                  : c
+              )
+            );
+            break;
+          }
+        } catch (e) {
+          console.warn("pollAvatar error:", e);
+          // можно не прерывать – пусть делает ещё попытку
+        }
+        await new Promise(r => setTimeout(r, delayMs));
+    }
+  }
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat || !selectedCharacter) return;
@@ -521,12 +575,44 @@ export default function App() {
                       onClick={() => setSelectedChatId(chat.id)}
                     >
                       <CardContent className="flex items-center space-x-3 p-2">
-                        <img
-                          src={character.avatar}
-                          alt={character.name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                        <span className="truncate leading-5">{character.name}</span>
+                      <div className="relative w-8 h-8">
+  {character.imageUrl && character.imageStatus !== "failed" ? (
+    <img
+      src={character.imageUrl}
+      alt={character.name}
+      className={`w-8 h-8 rounded-full object-cover transition-opacity ${
+        character.imageStatus === "pending" ? "opacity-50" : "opacity-100"
+      }`}
+    />
+  ) : (
+    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600">
+      {character.name.slice(0,1).toUpperCase()}
+    </div>
+  )}
+
+  {character.imageStatus === "pending" && (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )}
+
+  {character.imageStatus === "failed" && (
+    <div
+      className="absolute inset-0 flex items-center justify-center bg-red-500/70 rounded-full text-[9px] font-medium text-white"
+      title="Генерация не удалась"
+    >
+      !
+    </div>
+  )}
+</div>
+<span
+   className={`truncate leading-5 ${
+     character.imageStatus === "pending" ? "text-gray-400" :
+     character.imageStatus === "failed"  ? "text-red-500"  : ""
+   }`}
+ >
+   {character.name}
+ </span>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -556,10 +642,36 @@ export default function App() {
             </IconButton>
             {selectedCharacter && (
               <>
-                <img
-                  src={selectedCharacter.avatar}
-                  alt={selectedCharacter.name}
-                  className="w-8 h-8 rounded-full object-cover"/>
+                <div className="relative w-8 h-8">
+  {selectedCharacter.imageUrl && selectedCharacter.imageStatus !== "failed" ? (
+    <img
+      src={selectedCharacter.imageUrl}
+      alt={selectedCharacter.name}
+      className={`w-8 h-8 rounded-full object-cover transition-opacity ${
+        selectedCharacter.imageStatus === "pending" ? "opacity-50" : "opacity-100"
+      }`}
+    />
+  ) : (
+    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600">
+      {selectedCharacter.name.slice(0,1).toUpperCase()}
+    </div>
+  )}
+
+  {selectedCharacter.imageStatus === "pending" && (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )}
+
+  {selectedCharacter.imageStatus === "failed" && (
+    <div
+      className="absolute inset-0 flex items-center justify-center bg-red-500/70 rounded-full text-[9px] font-medium text-white"
+      title="Генерация не удалась"
+    >
+      !
+    </div>
+  )}
+</div>
                 <h2 className="font-semibold text-base">
                   {selectedCharacter.name}
                 </h2>
@@ -676,30 +788,71 @@ export default function App() {
 
       {/* ----------- Диалог выбора персонажа ----------- */}
       <Dialog open={isChooseCharacterOpen} onOpenChange={setIsChooseCharacterOpen}>
-        <DialogContent className="max-w-sm p-0">
-          <DialogHeader className="border-b p-4">
-            <DialogTitle>Выберите персонажа</DialogTitle>
-          </DialogHeader>
-          <div className="p-4 space-y-2">
-            {characters.map((c) => (
-              <Card
-                key={c.id}
-                className="cursor-pointer hover:bg-gray-50"
-                onClick={() => handleChooseCharacterForChat(c)}
-              >
-                <CardContent className="flex items-center gap-3 p-2">
-                  <img src={c.avatar} alt={c.name} className="w-8 h-8 rounded-full object-cover" />
-                  <span>{c.name}</span>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <DialogFooter className="p-4 border-t">
-            <Button variant="secondary" className="gap-2" onClick={handleOpenNewCharacter}>
-              <MdPersonAdd/> Новый персонаж
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+      <DialogContent className="max-w-sm p-0">
+        <DialogHeader className="border-b p-4">
+          <DialogTitle>Выберите персонажа</DialogTitle>
+        </DialogHeader>
+
+        {/* Прокручиваемая область */}
+        <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
+          {characters.map((c) => (
+            <Card
+              key={c.id}
+              className="cursor-pointer hover:bg-gray-50"
+               onClick={() => {
+                 if (c.imageStatus === "ready") handleChooseCharacterForChat(c);
+                 }}
+            >
+              <CardContent className="flex items-center gap-3 p-2">
+              <div className="relative w-8 h-8 shrink-0">
+                    {c.imageUrl && c.imageStatus !== "failed" ? (
+                      <img
+                        src={c.imageUrl}
+                        alt={c.name}
+                        className={`w-8 h-8 rounded-full object-cover transition-opacity ${
+                          c.imageStatus === "pending" ? "opacity-50" : "opacity-100"
+                        }`}
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600">
+                        {c.name.slice(0,1).toUpperCase()}
+                      </div>
+                    )}
+
+                    {c.imageStatus === "pending" && (
+                           <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-full">
+                             <div className="w-3 h-3 border-2 border-blue-500/70 border-t-transparent rounded-full animate-spin" />
+                           </div>
+                    )}
+
+                    {c.imageStatus === "failed" && (
+                      <div
+                        className="absolute inset-0 flex items-center justify-center bg-red-500/70 rounded-full text-[9px] font-medium text-white"
+                        title="Генерация не удалась"
+                      >
+                        !
+                      </div>
+                    )}
+                  </div>
+                  <span
+  className={`truncate ${
+    c.imageStatus === "pending" ? "text-gray-400" :
+     c.imageStatus === "failed"  ? "text-red-500"  : ""
+   }`}
+ >
+   {c.name}
+ </span>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <DialogFooter className="p-4 border-t">
+          <Button variant="secondary" className="gap-2" onClick={handleOpenNewCharacter}>
+            <MdPersonAdd /> Новый персонаж
+          </Button>
+        </DialogFooter>
+      </DialogContent>
       </Dialog>
 
       {/* ----------- Диалог создания персонажа ----------- */}
@@ -713,11 +866,6 @@ export default function App() {
               placeholder="Имя"
               value={newCharForm.name}
               onChange={(e) => setNewCharForm({ ...newCharForm, name: e.target.value })}
-            />
-            <Input
-              placeholder="URL аватара"
-              value={newCharForm.avatar}
-              onChange={(e) => setNewCharForm({ ...newCharForm, avatar: e.target.value })}
             />
             <Textarea
               placeholder="Характер"

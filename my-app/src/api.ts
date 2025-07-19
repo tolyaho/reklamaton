@@ -14,27 +14,26 @@ export interface ApiMessage {
   }
   
   export interface Avatar {
-    id: number
-    name: string
-    url: string
-    personality: string
-    features: string
-    age: number
-    gender: string
-    hobbies: string
-    owner_id: number
-    created_at: string
+    id: number;
+    name: string;
+    personality: string;
+    features: string;
+    age: number;
+    gender: string;
+    hobbies: string;
+    image_url: string | null;
+    image_status: "pending" | "ready" | "failed";
+    is_system: boolean;
   }
   
   //–– for creating a new avatar ––
   export interface AvatarCreateDTO {
-    name: string
-    url: string
-    personality: string
-    features: string
-    age: number
-    gender: string
-    hobbies: string
+    name: string;
+    personality?: string;
+    features?: string;
+    age?: number;
+    gender?: string;
+    hobbies?: string;
   }
   
   export interface UserRead {
@@ -74,16 +73,20 @@ export interface ApiMessage {
   }
   
   /** Create a new avatar for this user */
-  export function createAvatar(
-    userId: number,
-    avatar: AvatarCreateDTO
-  ): Promise<Avatar> {
-    return request<Avatar>(`${BASE}/users/${userId}/avatars/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(avatar)
-    })
-  }
+  export function createAvatar(userId: number, dto: {
+  name: string;
+  personality?: string;
+  features?: string;
+  age?: number;
+  gender?: string;
+  hobbies?: string;
+}): Promise<Avatar> {
+  return request(`${BASE}/users/${userId}/avatars/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dto)
+  });
+}
   
   // ◼️ Chats
   
