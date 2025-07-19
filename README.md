@@ -1,12 +1,21 @@
 # Project
 
 ## reklamaton folder - backend part
-To run, write:
+Если хотите удалить базу данных:
+
 ```bash
 lsof -ti tcp:8000 | xargs kill -9
 rm database.db
 uvicorn main:app --reload
 ```
+
+Если нет
+```bash
+lsof -ti tcp:8000 | xargs kill -9
+rm database.db
+uvicorn main:app --reload
+```
+
 
 ## my-app folder - frontend part
 
