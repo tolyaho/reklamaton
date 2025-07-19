@@ -18,9 +18,9 @@ brew install node
 
 Также нужно
 
-'''
+```
 npm install
-'''
+```
 
 Запускать из папки my-app
 ```
