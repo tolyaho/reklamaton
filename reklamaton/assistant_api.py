@@ -1,121 +1,171 @@
-import os, time
-from openai import OpenAI
-from models import Avatar
-from typing import Iterator
+import os
+import time
+from typing import Iterator, Optional, Any
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-ASSISTANT_ID = os.getenv("ASSISTANT_ID")
-SYSTEM_TMPL = "{prompt}"
+from openai import OpenAI
+
+# NOTE: do NOT call load_dotenv() here; main.py already does it.
+# Keep this module import-safe even when OPENAI_API_KEY is missing.
+
+
+class OpenAIConfigError(RuntimeError):
+    pass
+
+
+def _env(name: str, default: Optional[str] = None) -> Optional[str]:
+    v = os.getenv(name)
+    return v if v not in (None, "") else default
+
+
+# If you set ASSISTANT_ID in env, it will be used; otherwise we create one lazily.
+ASSISTANT_ID: Optional[str] = _env("ASSISTANT_ID")
+
+# Recommended defaults for roleplay/chat:
+# - try gpt-5-mini first (good quality/cost)
+# - fallback to gpt-4o if the model is not supported by Assistants in your account
+ASSISTANT_MODEL = _env("OPENAI_ASSISTANT_MODEL", "gpt-5-mini")
+ASSISTANT_FALLBACK_MODEL = _env("OPENAI_ASSISTANT_FALLBACK_MODEL", "gpt-4o")
+
+POLL_DELAY_SEC = float(_env("OPENAI_RUN_POLL_DELAY", "0.4"))
+RUN_POLL_TIMEOUT_SEC = float(_env("OPENAI_RUN_POLL_TIMEOUT", "90"))  # safety
+
+
+_client: Optional[OpenAI] = None
+
+
+def _get_client() -> OpenAI:
+    global _client
+    if _client is not None:
+        return _client
+    key = _env("OPENAI_API_KEY")
+    if not key:
+        raise OpenAIConfigError("OPENAI_API_KEY is not set")
+    _client = OpenAI(api_key=key)
+    return _client
+
+
+def _extract_text_from_message(msg: Any) -> str:
+    """
+    Assistants message content is a list of parts.
+    We try to pull the first text-ish part safely.
+    """
+    try:
+        parts = getattr(msg, "content", None) or []
+        for p in parts:
+            ptype = getattr(p, "type", None)
+            if ptype == "text":
+                t = getattr(p, "text", None)
+                v = getattr(t, "value", None)
+                if v:
+                    return str(v).strip()
+            if ptype == "output_text":  # some event payloads use this
+                t = getattr(p, "text", None)
+                v = getattr(t, "value", None)
+                if v:
+                    return str(v).strip()
+    except Exception:
+        pass
+    # fallback: stringify
+    return str(msg).strip()
 
 
 def _ensure_assistant() -> str:
+    """
+    Lazily get/create an assistant. If model is unsupported, retry with fallback.
+    """
     global ASSISTANT_ID
     if ASSISTANT_ID:
         return ASSISTANT_ID
-    assistant = client.beta.assistants.create(
-        name="AI Character Avatar",
-        instructions="Generic container; avatar prompt is added per thread.",
-        model="gpt-4o",
-    )
-    ASSISTANT_ID = assistant.id
+
+    c = _get_client()
+    try:
+        a = c.beta.assistants.create(
+            name="AI Character Avatar",
+            instructions="Generic container; avatar prompt is added per run instructions.",
+            model=ASSISTANT_MODEL,
+        )
+    except Exception:
+        a = c.beta.assistants.create(
+            name="AI Character Avatar",
+            instructions="Generic container; avatar prompt is added per run instructions.",
+            model=ASSISTANT_FALLBACK_MODEL,
+        )
+
+    ASSISTANT_ID = a.id
     return ASSISTANT_ID
 
 
-def assistant_chat_sync(thread_id: str, avatar: Avatar, user_msg: str) -> str:
+def create_new_thread() -> str:
+    c = _get_client()
+    return c.beta.threads.create().id
+
+
+def assistant_chat_sync(thread_id: str, avatar: Any, user_msg: str) -> str:
+    """
+    Blocking assistant call using Assistants API (thread + run).
+    """
+    c = _get_client()
     assistant_id = _ensure_assistant()
-    client.beta.threads.messages.create(thread_id=thread_id, role="user", content=user_msg)
-    run = client.beta.threads.runs.create(
+
+    c.beta.threads.messages.create(thread_id=thread_id, role="user", content=user_msg)
+
+    run = c.beta.threads.runs.create(
         thread_id=thread_id,
         assistant_id=assistant_id,
-        instructions=avatar.prompt,
+        instructions=str(getattr(avatar, "prompt", "")),
     )
-    while run.status not in {"completed", "failed"}:
-        time.sleep(0.4)
-        run = client.beta.threads.runs.retrieve(run.id, thread_id=thread_id)
-    if run.status == "failed":
-        raise RuntimeError(run.last_error)
-    msgs = client.beta.threads.messages.list(thread_id=thread_id, order="desc", limit=1)
-    return msgs.data[0].content[0].text.value.strip()
+
+    t0 = time.time()
+    while run.status not in ("completed", "failed", "cancelled", "expired"):
+        if time.time() - t0 > RUN_POLL_TIMEOUT_SEC:
+            raise RuntimeError("Run polling timeout")
+        time.sleep(POLL_DELAY_SEC)
+        run = c.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
+
+    if run.status != "completed":
+        err = getattr(run, "last_error", None)
+        raise RuntimeError(getattr(err, "message", f"Run failed with status={run.status}"))
+
+    msgs = c.beta.threads.messages.list(thread_id=thread_id, order="desc", limit=5)
+    for m in msgs.data:
+        if getattr(m, "role", None) == "assistant":
+            return _extract_text_from_message(m)
+    return _extract_text_from_message(msgs.data[0]) if msgs.data else ""
 
 
-def assistant_chat_stream(thread_id: str, avatar: Avatar, user_msg: str) -> Iterator[str]:
+def assistant_chat_stream(thread_id: str, avatar: Any, user_msg: str) -> Iterator[str]:
     """
-    Stream the assistant's reply token-by-token for a given OpenAI thread.
-
-    Args:
-        thread_id: Existing OpenAI Thread ID (one per ChatSession row).
-        avatar:    Avatar instance whose `prompt` supplies the system instructions.
-        user_msg:  The latest user message content.
-
-    Yields:
-        Incremental text chunks (tokens / fragments) from the assistant response.
+    Streaming assistant reply as deltas.
+    Yields text chunks.
     """
+    c = _get_client()
     assistant_id = _ensure_assistant()
 
-    # 1. Append the user's new message to the thread
-    client.beta.threads.messages.create(
-        thread_id=thread_id,
-        role="user",
-        content=user_msg,
-    )
+    c.beta.threads.messages.create(thread_id=thread_id, role="user", content=user_msg)
 
-    # 2. Kick off a streaming run with the avatar's prompt as instructions
-    stream = client.beta.threads.runs.create(
+    stream = c.beta.threads.runs.create(
         thread_id=thread_id,
         assistant_id=assistant_id,
         stream=True,
-        instructions=SYSTEM_TMPL.format(prompt=avatar.prompt),
+        instructions=str(getattr(avatar, "prompt", "")),
     )
 
-    # 3. Iterate over streaming events
-    try:
-        for event in stream:
-            etype = getattr(event, "event", None)
+    for event in stream:
+        etype = getattr(event, "event", None)
 
-            # Incremental text deltas
-            if etype == "thread.message.delta":
-                # Guard against empty / non-text deltas
-                try:
-                    parts = event.data.delta.content
-                    if parts and parts[0].type == "output_text":
-                        delta = parts[0].text.value
-                        if delta:
-                            yield delta
-                except Exception:
-                    # Silently skip malformed delta events
-                    continue
+        if etype == "thread.message.delta":
+            try:
+                parts = event.data.delta.content
+                if parts and parts[0].type == "output_text":
+                    delta = parts[0].text.value
+                    if delta:
+                        yield delta
+            except Exception:
+                continue
 
-            # Some SDK versions emit a consolidated final message event
-            elif etype == "thread.message.completed":
-                try:
-                    full_parts = event.data.content
-                    if full_parts and full_parts[0].type == "output_text":
-                        text_val = full_parts[0].text.value
-                        if text_val:
-                            # You may *optionally* yield any tail portion not already sent.
-                            # (If deltas covered everything, this may duplicate; skip if not needed)
-                            pass
-                except Exception:
-                    continue
+        elif etype == "thread.run.failed":
+            err = getattr(event.data, "last_error", None)
+            raise RuntimeError(getattr(err, "message", "Run failed"))
 
-            # If a tool call streaming occurs, you could handle it here:
-            # elif etype.startswith("thread.run.step"):
-            #     ...
-
-            # Detect failure
-            elif etype == "thread.run.failed":
-                err = getattr(event.data, "last_error", None)
-                msg = getattr(err, "message", "Run failed")
-                raise RuntimeError(f"Assistant run failed: {msg}")
-
-            # Completed run (no more deltas expected)
-            elif etype == "thread.run.completed":
-                break
-
-    finally:
-        # (Optional) any cleanup if needed
-        pass
-
-
-def create_new_thread(avatar: Avatar) -> str:
-    return client.beta.threads.create().id
+        elif etype == "thread.run.completed":
+            break

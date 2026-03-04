@@ -1,7 +1,7 @@
 # seed.py
 from sqlmodel import Session, select
 from models import Avatar, AvatarCreate
-from prompter import build_avatar_prompt
+from prompter import build_avatar_prompt, build_image_prompt
 
 
 def seed_system_avatars(session: Session) -> None:
@@ -62,6 +62,7 @@ def seed_system_avatars(session: Session) -> None:
             hobbies=data["hobbies"],
         )
         prompt = build_avatar_prompt(dto)
+        image_prompt = build_image_prompt(dto)
 
         avatar = Avatar(
             name=dto.name,
@@ -72,7 +73,9 @@ def seed_system_avatars(session: Session) -> None:
             gender=dto.gender,
             hobbies=dto.hobbies,
             prompt=prompt,
+            image_prompt=image_prompt,
             is_system=True,
+            image_status="pending",
         )
         session.add(avatar)
 

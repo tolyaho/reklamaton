@@ -27,7 +27,7 @@ COPY reklamaton/ ./reklamaton/
 COPY my-app/ ./my-app/
 
 # Открываем порты для разработки
-EXPOSE 8000 5173
+EXPOSE 8000 5174
 
 # Запускаем backend и frontend параллельно
-CMD ["sh", "-c", "lsof -ti tcp:8000 | xargs kill -9 || true && cd /app/reklamaton && uvicorn main:app --reload --host 0.0.0.0 --port 8000 & cd /app/my-app && npm run dev -- --host 0.0.0.0 --port 5173"]
+CMD ["sh", "-c", "lsof -ti tcp:8000 | xargs kill -9 || true && cd /app/reklamaton && uvicorn main:app --reload --host 0.0.0.0 --port 8000 & cd /app/my-app && npm run dev -- --host 0.0.0.0 --port 5174"]

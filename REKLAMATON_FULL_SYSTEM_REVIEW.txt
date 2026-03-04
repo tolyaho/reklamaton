@@ -1,0 +1,613 @@
+REKLAMATON PROJECT - FULL TECHNICAL REVIEW
+Generated: 2026-03-03
+
+====================================================================
+1) HIGH-LEVEL OVERVIEW
+====================================================================
+
+Reklamaton is a full-stack web application for:
+- authenticating users via Google OAuth on the frontend,
+- creating AI avatars (persona + generated image),
+- opening chat sessions per (user, avatar),
+- exchanging messages with an OpenAI Assistant-backed backend,
+- persisting all state in SQLite.
+
+Current repository layout (important):
+- /reklamaton                         -> repository root
+- /reklamaton/reklamaton             -> Python backend source
+- /reklamaton/my-app                 -> React frontend source
+- /reklamaton/static                 -> extra top-level static directory
+- /reklamaton/reklamaton/static      -> backend static directory actually used by FastAPI
+
+This is currently a monorepo-like structure with backend and frontend side-by-side.
+
+
+====================================================================
+2) RUNTIME ARCHITECTURE
+====================================================================
+
+Backend stack:
+- FastAPI (HTTP + WebSocket server)
+- SQLModel/SQLAlchemy + SQLite
+- OpenAI Python SDK (Assistants API)
+- Requests library (FusionBrain image generation API)
+
+Frontend stack:
+- React 19 + TypeScript + Vite
+- Tailwind CSS v4
+- shadcn/ui + Radix UI primitives
+- framer-motion + react-icons
+- direct fetch-based API calls (no state library)
+
+Storage:
+- SQLite file: /reklamaton/reklamaton/database.db
+- Generated avatar images: /reklamaton/reklamaton/static/avatars/*.png
+
+External services:
+- Google Identity Services (OAuth token flow in browser)
+- Google UserInfo endpoint
+- OpenAI Assistants API
+- FusionBrain image generation API
+
+
+====================================================================
+3) FOLDER-BY-FOLDER BREAKDOWN
+====================================================================
+
+3.1 Root folder: /reklamaton
+--------------------------------
+- README.md
+  - brief run instructions (Russian) for backend and frontend.
+  - tells user to kill port 8000 and run uvicorn for backend.
+- Dockerfile
+  - builds both backend and frontend into one image.
+  - installs Python + Node.
+  - installs backend deps from reklamaton/requirements.txt.
+  - installs frontend deps via npm ci in my-app.
+  - starts backend and frontend in one shell command.
+  - exposes ports 8000 and 5173.
+- LICENSE
+  - MIT license.
+- my-app/
+  - frontend app.
+- reklamaton/
+  - backend app.
+- static/
+  - top-level static directory with avatars (appears duplicated vs backend static path).
+- .venv/
+  - Python virtual environment in root.
+- .idea/
+  - IDE project metadata.
+
+
+3.2 Backend folder: /reklamaton/reklamaton
+------------------------------------------
+
+main.py
+-------
+Primary application entrypoint and HTTP/WebSocket API.
+
+Core setup:
+- Creates FastAPI app.
+- Adds CORS for exactly http://localhost:5173.
+- Mounts static files from relative "static" at URL /static.
+- Ensures static/avatars directory exists on startup of module import.
+
+FusionBrain integration:
+- Reads FUSION_BASE, FUSION_API_KEY, FUSION_SECRET_KEY from env.
+- Defines global fusion_client and pipeline_id.
+- On startup:
+  - creates DB tables,
+  - seeds default system avatars if absent,
+  - initializes FusionBrain client and pipeline if keys exist,
+  - catches initialization failures and continues startup.
+- Background image generation:
+  - generate_avatar_image_async() generates image file(s), updates avatar.image_url/image_status.
+  - queue_system_avatar_generation() spawns daemon threads for system avatars with pending status.
+
+API endpoints:
+- POST /users/
+  - create user if username not found; otherwise returns existing user.
+- GET /users/{user_id}/
+  - returns one user.
+- POST /users/{user_id}/avatars/
+  - creates user-owned avatar; builds text prompt + image prompt.
+  - schedules background image generation task.
+- GET /users/{user_id}/avatars/
+  - returns system avatars + user avatars.
+- GET /avatars/{avatar_id}/
+  - returns avatar by ID.
+- POST /users/{user_id}/chats/?avatar_id=...
+  - validates user + avatar ownership/system flag.
+  - creates OpenAI thread, then chat session DB row.
+- GET /users/{user_id}/chats/
+  - returns user chats.
+- GET /chats/{chat_id}/messages/
+  - returns ordered message history.
+- POST /api/assistant/{chat_id}/
+  - validates chat/avatar relation.
+  - stores user message.
+  - sends message to OpenAI Assistant sync flow.
+  - stores assistant reply.
+- WS /ws/assistant/{chat_id}
+  - receives user text frames.
+  - streams assistant token chunks to client via WebSocket.
+  - stores full assistant response after stream completes.
+
+Observed implementation details:
+- `main.py` defines GET /avatars/{avatar_id}/ twice (same handler shape).
+- session in WebSocket is opened via `next(get_session())` and not explicitly closed.
+- create_engine is called in both database.py and main.py (duplicate engine creation pattern).
+- imports `requests` in main.py but currently unused there.
+
+
+models.py
+---------
+Defines:
+- Pydantic API schemas (UserCreate/UserRead, AvatarCreate/AvatarRead, ChatRequest/ChatResponse, MessageRead).
+- SQLModel ORM tables:
+  - User
+  - Avatar
+  - ChatSession
+  - Message
+
+Relationship model:
+- User 1:N Avatar
+- User 1:N ChatSession
+- Avatar 1:N ChatSession
+- ChatSession 1:N Message
+
+Notable field semantics:
+- Avatar.is_system distinguishes global/system avatars from user-owned avatars.
+- Avatar.image_status lifecycle: pending | ready | failed.
+- ChatSession.thread_id stores OpenAI Thread ID.
+
+
+database.py
+-----------
+- DATABASE_URL = sqlite:///./database.db
+- engine = create_engine(..., echo=True)
+- init_db() -> creates tables
+- get_session() -> yields SQLModel session
+
+
+store.py
+--------
+Persistence helper functions:
+- create_chat_session()
+- get_chat_session()
+- add_message()
+
+These encapsulate session.add/commit/refresh patterns.
+
+
+assistant_api.py
+----------------
+OpenAI adapter module.
+
+On import:
+- creates OpenAI client with OPENAI_API_KEY env var.
+- reads ASSISTANT_ID env var.
+
+Assistant flow:
+- _ensure_assistant():
+  - returns ASSISTANT_ID if already set.
+  - otherwise creates assistant dynamically (model gpt-4o) and caches its ID in process memory.
+- assistant_chat_sync():
+  - append user message to thread,
+  - start run with avatar.prompt as instructions,
+  - poll run status until completed/failed,
+  - fetch latest message and return text.
+- assistant_chat_stream():
+  - append user message,
+  - create streaming run,
+  - yield incremental output_text deltas,
+  - handle run failed/completed events.
+- create_new_thread():
+  - creates OpenAI thread and returns thread ID.
+
+Operational implications:
+- If OPENAI_API_KEY missing, module import fails and backend startup fails.
+- Assistant may be auto-created at runtime if ASSISTANT_ID not preconfigured.
+
+
+prompter.py
+-----------
+- build_avatar_prompt(AvatarCreate)
+  - generates roleplay system prompt in Russian from avatar traits.
+- build_image_prompt(AvatarCreate)
+  - generates image generation prompt text for portrait style.
+
+
+image_gen.py
+------------
+FusionBrainAPI wrapper:
+- get_pipeline()
+- generate(...)
+- check_generation(...)
+- save_images(...)
+
+Mechanics:
+- Uses X-Key/X-Secret headers.
+- Generates images through pipeline API.
+- Polls status endpoint until DONE or timeout.
+- Saves either URL-based or base64 image payloads to PNG files.
+
+
+seed.py
+-------
+Seeds predefined system avatars if none exist:
+- Four Russian-language default personas:
+  - Алиса (philosophical)
+  - Борис (humor)
+  - Светлана (coach)
+  - Дмитрий (technical)
+- For each avatar:
+  - builds persona prompt and image prompt,
+  - sets is_system=True,
+  - sets image_status="pending".
+
+Seed behavior is idempotent only at coarse level:
+- If any system avatar exists, seeding stops.
+
+
+test_gen.py
+-----------
+Manual integration script to validate avatar generation flow:
+- upserts/creates test user,
+- creates test avatar,
+- polls avatar status until ready/failed.
+
+
+ws_test.py
+----------
+Simple WebSocket manual test client.
+Important mismatch:
+- uses query param `persona_id`, but backend expects `avatar_id`.
+
+
+venv/ and __pycache__/
+----------------------
+- local runtime artifacts / cached bytecode.
+- not source code.
+
+
+3.3 Frontend folder: /reklamaton/my-app
+---------------------------------------
+
+src/App.tsx
+-----------
+Main UI application containing almost all product logic.
+
+Core responsibilities:
+- user session/login UI
+- chat list + selected chat state
+- avatar listing and creation dialog
+- message list and send flow
+- optimistic message rendering
+- avatar image generation polling
+- dynamic script injection for Google OAuth SDK
+
+Authentication flow:
+- Loads Google Identity script at runtime.
+- Initializes OAuth token client with hardcoded CLIENT_ID.
+- Requests access token from popup.
+- Calls Google userinfo endpoint.
+- Calls backend `upsertUser(email)` to map Google user -> backend user record.
+- Stores user profile in localStorage.
+
+Data loading flow:
+- After login (backendId available):
+  - fetches avatars: GET /users/{id}/avatars/
+  - fetches chats: GET /users/{id}/chats/
+- On selected chat change:
+  - fetches messages: GET /chats/{chat_id}/messages/
+
+Avatar creation flow:
+- Opens "new character" dialog.
+- POST /users/{id}/avatars/ with avatar traits.
+- Appends returned avatar into local state.
+- Starts polling GET /avatars/{avatar_id}/ to wait for image status.
+
+Chat flow:
+- create chat: POST /users/{id}/chats/?avatar_id=...
+- message send:
+  - optimistic user bubble,
+  - POST /api/assistant/{chat_id}/ with avatar_id + message,
+  - append assistant reply on success.
+
+UI/UX features:
+- animated sidebar and messages (framer-motion),
+- typing indicator while waiting for sync assistant reply,
+- pending/failed overlays on avatar images,
+- responsive dialogs for choosing and creating avatars.
+
+Notable code details:
+- contains demo `initialCharacters`, `initialChats`, `initialMessages` arrays that are not used in final data flow.
+- contains unused helper `getOrCreateUserId`.
+- duplicates API base lookup in multiple places (`API_BASE` and inline fallback).
+
+
+src/api.ts
+----------
+Typed fetch wrapper around backend endpoints.
+
+Features:
+- request<T>() helper throws on non-2xx.
+- maps backend `avatar_id` to frontend `characterId` in chat functions.
+- exposes:
+  - upsertUser
+  - listAvatars
+  - createAvatar
+  - listChats
+  - createChat
+  - listMessages
+  - sendMessage
+
+
+src/types.ts
+------------
+- additional frontend type declarations for API payloads.
+- partially overlaps with types in api.ts.
+
+
+src/components/ui/*
+-------------------
+Shadcn/Radix-based reusable components:
+- button.tsx
+- card.tsx
+- dialog.tsx
+- input.tsx
+- textarea.tsx
+
+These are mostly generic primitives and style wrappers, not domain logic.
+
+
+src/index.css and styling
+-------------------------
+- Tailwind v4 setup with CSS variables.
+- light/dark token definitions.
+- baseline styling.
+
+
+Build/tooling files:
+- package.json: scripts/dev/build/lint/preview and React/Tailwind deps.
+- vite.config.ts: React + Tailwind plugins, `@` alias.
+- eslint.config.js: TS + React hooks + react-refresh rules.
+- tsconfig*.json: strict TS settings and project references.
+- components.json: shadcn generator metadata.
+
+
+====================================================================
+4) DATABASE DESIGN AND CURRENT STATE
+====================================================================
+
+Database engine:
+- SQLite local file: /reklamaton/reklamaton/database.db
+
+Schema (from live DB):
+- user(id PK, username UNIQUE INDEX, age, sex, created_at)
+- avatar(id PK, owner_id FK->user.id, image fields, prompt fields, created_at)
+- chatsession(id PK, thread_id INDEX, user_id FK, avatar_id FK, created_at)
+- message(id PK, chat_id INDEX FK, role, content, created_at)
+
+Current row counts at audit time:
+- user: 1
+- avatar: 6
+- chatsession: 5
+- message: 14
+
+
+====================================================================
+5) END-TO-END REQUEST AND DATA FLOWS
+====================================================================
+
+Flow A: User login and backend identity
+1) Frontend gets Google access token in popup.
+2) Frontend calls Google userinfo endpoint.
+3) Frontend sends email to POST /users/.
+4) Backend upserts by username (email string) and returns UserRead.
+5) Frontend stores backend user ID in localStorage profile.
+
+Flow B: Initial app hydration
+1) Frontend calls list avatars for user.
+2) Backend returns union of system + user avatars.
+3) Frontend calls list chats for user.
+4) Frontend maps backend avatar_id to characterId.
+5) Frontend selects first chat if none selected.
+
+Flow C: Avatar creation and image generation
+1) Frontend submits avatar traits.
+2) Backend builds text prompt + image prompt.
+3) Backend inserts avatar with image_status=pending.
+4) Backend enqueues background generation task.
+5) Background task:
+   - calls FusionBrain generate API,
+   - polls for completion,
+   - saves static image file,
+   - updates image_url and image_status.
+6) Frontend polls /avatars/{id}/ until ready/failed.
+
+Flow D: Chat creation
+1) Frontend picks avatar and requests new chat.
+2) Backend validates ownership/system avatar.
+3) Backend creates OpenAI thread.
+4) Backend stores ChatSession with thread_id.
+5) Frontend adds chat locally and selects it.
+
+Flow E: Chat messaging (HTTP mode)
+1) Frontend optimistically appends user message in UI.
+2) Backend stores user message in DB.
+3) Backend sends thread message to OpenAI Assistant run.
+4) Backend waits until run completed.
+5) Backend stores assistant reply in DB.
+6) Frontend appends assistant reply from API response.
+
+Flow F: Chat messaging (WebSocket streaming mode)
+1) Client sends user text over WS.
+2) Backend stores user message.
+3) Backend streams assistant deltas from OpenAI.
+4) Backend forwards deltas via WS frames.
+5) Backend stores final merged assistant message in DB.
+
+
+====================================================================
+6) CONFIGURATION AND ENVIRONMENT CONTRACT
+====================================================================
+
+Backend env vars:
+- OPENAI_API_KEY          (required for assistant_api import/startup)
+- ASSISTANT_ID            (optional; if absent assistant can be created dynamically)
+- FUSION_BASE             (optional, defaults to FusionBrain base URL)
+- FUSION_API_KEY          (optional, needed for image generation)
+- FUSION_SECRET_KEY       (optional, needed for image generation)
+
+Frontend env vars:
+- VITE_API_BASE           (optional; defaults to http://127.0.0.1:8000)
+
+Ports:
+- Backend: 8000
+- Frontend dev: 5173
+
+Cross-origin:
+- Backend CORS allowlist currently fixed to http://localhost:5173.
+- Frontend default API base uses 127.0.0.1.
+  This generally works for simple CORS host checks only when browser origin matches allowed host exactly; mismatch localhost vs 127.0.0.1 can create access issues depending on run mode.
+
+
+====================================================================
+7) HOW THE SYSTEM IS BUILT (BUILD + RUN MODEL)
+====================================================================
+
+Local development model:
+- Backend run from /reklamaton/reklamaton with uvicorn main:app.
+- Frontend run from /reklamaton/my-app with npm run dev.
+- Backend serves JSON + WebSocket APIs and static avatar files.
+- Frontend is Vite dev server consuming backend APIs.
+
+Container model (Dockerfile):
+- Base: node:20-slim
+- Installs python3 + pip3.
+- Installs backend deps and frontend deps.
+- Copies full source tree.
+- Single CMD runs backend and frontend in one container process shell.
+
+Operational note:
+- Single-container dual-process approach is easy for local demo but not ideal for production observability/scaling/restarts.
+
+
+====================================================================
+8) KEY TECHNICAL OBSERVATIONS / RISKS
+====================================================================
+
+1) Startup dependency coupling:
+- backend import/startup depends on external services (OpenAI key, FusionBrain availability).
+- some resilience was added for FusionBrain initialization failure, but OpenAI client initialization still fails if OPENAI_API_KEY missing.
+
+2) Duplicate route declaration:
+- GET /avatars/{avatar_id}/ appears twice in main.py.
+
+3) Resource lifecycle concerns:
+- WebSocket handler uses session generator directly and does not close session explicitly.
+
+4) Multiple virtual environments:
+- root `.venv` and backend `venv` coexist, causing command/path confusion.
+
+5) Source/artifact mixing:
+- repo contains database.db, generated PNG avatars, __pycache__, and IDE files as tracked/untracked working changes.
+
+6) Nested structure and duplicate static dirs:
+- top-level `static/` and backend `reklamaton/static/` can confuse asset paths.
+- backend uses relative static path from its current working directory.
+
+7) Frontend code health:
+- monolithic App.tsx (~900+ lines) combines auth, API orchestration, state management, and UI rendering.
+- leftover demo/unused code increases maintenance overhead.
+
+8) CORS/API host consistency:
+- CORS allowlist uses localhost only; frontend default API uses 127.0.0.1.
+
+9) Test artifacts mismatch:
+- ws_test.py query parameter uses `persona_id` while backend expects `avatar_id`.
+
+
+====================================================================
+9) COMPONENT INTERACTION MAP
+====================================================================
+
+Frontend React (my-app)
+  -> HTTP calls (api.ts)
+    -> FastAPI routes (main.py)
+      -> SQLModel helpers (store.py/database.py/models.py) + SQLite
+      -> OpenAI Assistants (assistant_api.py)
+      -> OpenAI image service (image_gen.py)
+      -> Static file storage (reklamaton/static/avatars)
+  <- JSON/WS responses
+<- UI updates (chat, avatars, auth state)
+
+
+====================================================================
+10) PRACTICAL RUN CHECKLIST
+====================================================================
+
+Backend:
+1) cd /reklamaton/reklamaton
+2) activate the intended venv
+3) set OPENAI_API_KEY (and optional OPENAI_IMAGE_* settings)
+4) run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+Frontend:
+1) cd /reklamaton/my-app
+2) npm install (if needed)
+3) optionally set VITE_API_BASE
+4) npm run dev
+
+Access:
+- frontend: http://localhost:5174
+- backend docs: http://127.0.0.1:8000/docs (when running)
+
+
+====================================================================
+11) SUMMARY
+====================================================================
+
+Reklamaton is a working full-stack AI avatar chat system with:
+- identity bootstrap from Google OAuth,
+- persistent user/avatar/chat/message data in SQLite,
+- OpenAI Assistant-based conversations,
+- asynchronous avatar image generation and static serving,
+- modern React UI with dialogs, animation, and polling UX.
+
+The core product architecture is clear and functional, but there are several engineering debt areas (runtime coupling, mixed artifacts, route duplication, monolithic frontend component, env/runtime inconsistencies) that should be addressed for production reliability and maintainability.
+
+
+====================================================================
+12) UPDATE (2026-03-03) - OPENAI MIGRATION STATUS
+====================================================================
+
+This section supersedes older references in this document that mention
+FusionBrain/GigaChat image generation or frontend port 5173.
+
+Current provider status:
+- Chat generation: OpenAI Assistants API (`assistant_api.py`).
+- Avatar image generation: OpenAI Images API (`image_gen.py`).
+- No active GigaChat runtime dependency remains in backend runtime files.
+
+Code consistency updates completed:
+- `main.py` now initializes `OpenAIImageAPI` on startup.
+- Legacy `GIGACHAT_*` config references were removed from runtime path.
+- `image_gen.py` now uses `OpenAIImageAPI` as primary class name.
+- Backward compatibility alias kept: `FusionBrainAPI = OpenAIImageAPI`.
+- `test_gen.py` converted to OpenAI-only integration flow.
+
+Runtime behavior verified:
+- Backend starts successfully and logs "OpenAI image client initialized".
+- End-to-end avatar generation test passes:
+  `pending -> ready` with saved static image URL.
+- Failed avatars are still excluded from list results, and pending timeout
+  protection remains in place (10 minutes).
+
+Current local development ports:
+- Backend: 8000
+- Frontend dev: 5174
+

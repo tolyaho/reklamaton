@@ -3,6 +3,9 @@ import os
 import time
 import requests
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ——— CONFIG ———
 BASE_URL = os.getenv("API_BASE", "http://127.0.0.1:8000")
@@ -26,6 +29,13 @@ def get_or_create_user():
     user = resp.json()
     logging.info("User record: %s", user)
     return user["id"]
+
+
+def validate_openai_env():
+    key = os.getenv("OPENAI_API_KEY", "")
+    if not key:
+        raise RuntimeError("OPENAI_API_KEY is not set")
+    logging.info("OPENAI_API_KEY detected, starting OpenAI image flow test")
 
 
 def create_test_avatar(user_id: int):
@@ -76,6 +86,7 @@ def poll_avatar(avatar_id: int):
 
 def main():
     logging.info("=== Тест генерации аватара ===")
+    validate_openai_env()
     user_id = get_or_create_user()
     avatar_id = create_test_avatar(user_id)
     logging.info("Ждём окончания фоновой генерации…")

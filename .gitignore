@@ -1,0 +1,9 @@
+.env
+reklamaton/.env
+__pycache__/
+*.pyc
+.idea/
+node_modules/
+reklamaton/database.db
+reklamaton/venv/
+static/
