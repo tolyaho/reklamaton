@@ -1,4 +1,3 @@
-# image_gen.py
 import os
 import uuid
 import base64

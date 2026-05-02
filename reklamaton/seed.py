@@ -1,4 +1,3 @@
-# seed.py
 from sqlmodel import Session, select
 from models import Avatar, AvatarCreate
 from prompter import build_avatar_prompt, build_image_prompt
