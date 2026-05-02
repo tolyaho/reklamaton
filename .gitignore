@@ -1,9 +1,16 @@
 .env
 reklamaton/.env
+my-app/.env
 __pycache__/
 *.pyc
 .idea/
+.vscode/
+.DS_Store
+*.log
 node_modules/
+my-app/dist/
+my-app/.vite/
 reklamaton/database.db
 reklamaton/venv/
+venv/
 static/
