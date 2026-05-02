@@ -1,8 +1,11 @@
 {
-  "name": "my-app",
+  "name": "reklamaton-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "node ./node_modules/vite/dist/node/cli.js",
     "build": "tsc -b && vite build",
