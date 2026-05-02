@@ -1,52 +1,49 @@
-// src/api.ts
-
 export interface ApiMessage {
-    id: number
-    chat_id: number
-    role: "user" | "assistant"
-    content: string
-    created_at: string
-  }
-  
-  export interface ChatSession {
+  id: number
+  chat_id: number
+  role: "user" | "assistant"
+  content: string
+  created_at: string
+}
+
+export interface ChatSession {
   id: number
   characterId: number
   customerId?: number | null
   businessId?: number | null
 }
-  
-  export interface Avatar {
-    id: number;
-    name: string;
-    personality: string;
-    features: string;
-    age: number;
-    gender: string;
-    hobbies: string;
-    image_url: string | null;
-    image_status: "pending" | "ready" | "failed";
-    is_system: boolean;
-  }
-  
-  //–– for creating a new avatar ––
-  export interface AvatarCreateDTO {
-    name: string;
-    personality?: string;
-    features?: string;
-    age?: number;
-    gender?: string;
-    hobbies?: string;
-  }
-  
-  export interface UserRead {
-    id: number
-    username: string
-    age?: number
-    sex?: string
-    created_at: string
-  }
-  
-  const BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000"
+
+export interface Avatar {
+  id: number
+  name: string
+  personality: string
+  features: string
+  age: number
+  gender: string
+  hobbies: string
+  image_url: string | null
+  image_status: "pending" | "ready" | "failed"
+  is_system: boolean
+}
+
+export interface AvatarCreateDTO {
+  name: string
+  personality?: string
+  features?: string
+  age?: number
+  gender?: string
+  hobbies?: string
+}
+
+export interface UserRead {
+  id: number
+  username: string
+  age?: number
+  sex?: string
+  created_at: string
+}
+
+const BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000"
 
 function currentUserIdFromStorage(): number {
   const raw = localStorage.getItem("userProfile")
@@ -56,100 +53,81 @@ function currentUserIdFromStorage(): number {
   if (!uid) throw new Error("Not logged in: backend user id missing")
   return uid
 }
-  
-  async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-    const res = await fetch(input, init)
-    if (!res.ok) throw new Error(await res.text())
-    return res.json()
-  }
-  
-  // ◼️ Users
-  
-  /**
-   * Create (or re-create) a user record for this Google username.
-   */
-  export function upsertUser(username: string, age?: number, sex?: string) {
-    return request<UserRead>(`${BASE}/users/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, age, sex })
-    })
-  }
-  
-  // ◼️ Avatars
-  
-  /** List all avatars owned by a user */
-  export function listAvatars(userId: number): Promise<Avatar[]> {
-    return request<Avatar[]>(`${BASE}/users/${userId}/avatars/`)
-  }
-  
-  /** Create a new avatar for this user */
-  export function createAvatar(userId: number, dto: {
-  name: string;
-  personality?: string;
-  features?: string;
-  age?: number;
-  gender?: string;
-  hobbies?: string;
-}): Promise<Avatar> {
+
+async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, init)
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+// Users
+
+/** Create or return existing user for this username. */
+export function upsertUser(username: string, age?: number, sex?: string) {
+  return request<UserRead>(`${BASE}/users/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, age, sex }),
+  })
+}
+
+// Avatars
+
+export function listAvatars(userId: number): Promise<Avatar[]> {
+  return request<Avatar[]>(`${BASE}/users/${userId}/avatars/`)
+}
+
+export function createAvatar(userId: number, dto: AvatarCreateDTO): Promise<Avatar> {
   return request(`${BASE}/users/${userId}/avatars/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(dto)
-  });
+    body: JSON.stringify(dto),
+  })
 }
-  
-  // ◼️ Chats
-  
-  /** List all chat‐sessions for a user, remapping avatar_id→characterId */
-  export function listChats(userId: number): Promise<ChatSession[]> {
-    return request<{ id: number; avatar_id: number; customer_id?: number | null; business_id?: number | null }[]>(
-      `${BASE}/users/${userId}/chats/`
-    ).then(arr =>
-      arr.map((c) => ({
-        id: c.id,
-        characterId: c.avatar_id,
-        customerId: c.customer_id ?? null,
-        businessId: c.business_id ?? null,
-      }))
-    )
-  }
-  
-  /** Start a new chat‐session for this user + avatar */
-  export function createChat(
-    userId: number,
-    avatarId: number
-  ): Promise<ChatSession> {
-    return request<{ id: number; avatar_id: number; customer_id?: number | null; business_id?: number | null }>(
-      `${BASE}/users/${userId}/chats/?avatar_id=${avatarId}`,
-      { method: "POST" }
-    ).then((c) => ({
+
+// Chats
+
+/** List chat sessions; maps avatar_id to characterId. */
+export function listChats(userId: number): Promise<ChatSession[]> {
+  return request<
+    { id: number; avatar_id: number; customer_id?: number | null; business_id?: number | null }[]
+  >(`${BASE}/users/${userId}/chats/`).then((arr) =>
+    arr.map((c) => ({
       id: c.id,
       characterId: c.avatar_id,
       customerId: c.customer_id ?? null,
       businessId: c.business_id ?? null,
-    }))
-  }
-  
-  // ◼️ Messages & Assistant (your existing functions)
-  
-  export function listMessages(chatId: number): Promise<ApiMessage[]> {
-    return request<ApiMessage[]>(`${BASE}/chats/${chatId}/messages/`)
-  }
-  
-  export function sendMessage(
-    chatId: number,
-    avatarId: number,
-    message: string
-  ): Promise<{ reply: string }> {
-    return request(`${BASE}/api/assistant/${chatId}/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ avatar_id: avatarId, message })
-    })
-  }
+    })),
+  )
+}
 
-// ◼️ Sales automation (MVP)
+export function createChat(userId: number, avatarId: number): Promise<ChatSession> {
+  return request<{ id: number; avatar_id: number; customer_id?: number | null; business_id?: number | null }>(
+    `${BASE}/users/${userId}/chats/?avatar_id=${avatarId}`,
+    { method: "POST" },
+  ).then((c) => ({
+    id: c.id,
+    characterId: c.avatar_id,
+    customerId: c.customer_id ?? null,
+    businessId: c.business_id ?? null,
+  }))
+}
+
+// Messages
+
+export function listMessages(chatId: number): Promise<ApiMessage[]> {
+  return request<ApiMessage[]>(`${BASE}/chats/${chatId}/messages/`)
+}
+
+export function sendMessage(chatId: number, avatarId: number, message: string): Promise<{ reply: string }> {
+  return request(`${BASE}/api/assistant/${chatId}/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ avatar_id: avatarId, message }),
+  })
+}
+
+// Sales automation
 
 export interface Business {
   id: number
@@ -220,7 +198,7 @@ export function getOrCreateBusiness(userId: number, payload?: Partial<Business>)
   return request<Business>(`${BASE}/users/${userId}/business`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload || {})
+    body: JSON.stringify(payload || {}),
   })
 }
 
@@ -234,7 +212,7 @@ export function updateBusiness(businessId: number, patch: Partial<Business>) {
   return request<Business>(`${BASE}/business/${businessId}?user_id=${userId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch)
+    body: JSON.stringify(patch),
   })
 }
 
@@ -243,7 +221,7 @@ export function upsertCustomer(businessId: number, payload: Partial<Customer>) {
   return request<Customer>(`${BASE}/business/${businessId}/customers/upsert?user_id=${userId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   })
 }
 
@@ -262,13 +240,15 @@ export function updateCustomer(businessId: number, customerId: number, patch: Pa
   return request<Customer>(`${BASE}/business/${businessId}/customers/${customerId}?user_id=${userId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch)
+    body: JSON.stringify(patch),
   })
 }
 
 export function getCustomerProfile(businessId: number, customerId: number) {
   const userId = currentUserIdFromStorage()
-  return request<CustomerProfile>(`${BASE}/business/${businessId}/customers/${customerId}/profile?user_id=${userId}`)
+  return request<CustomerProfile>(
+    `${BASE}/business/${businessId}/customers/${customerId}/profile?user_id=${userId}`,
+  )
 }
 
 export function createBusinessChat(
@@ -281,7 +261,12 @@ export function createBusinessChat(
   return request<{ id: number; avatar_id: number; customer_id?: number | null; business_id?: number | null }>(
     `${BASE}/business/${businessId}/chats/?avatar_id=${avatarId}&customer_id=${customerId}&user_id=${userId}&source_channel=${sourceChannel}`,
     { method: "POST" },
-  ).then((c) => ({ id: c.id, characterId: c.avatar_id, customerId: c.customer_id ?? null, businessId: c.business_id ?? null }))
+  ).then((c) => ({
+    id: c.id,
+    characterId: c.avatar_id,
+    customerId: c.customer_id ?? null,
+    businessId: c.business_id ?? null,
+  }))
 }
 
 export function createCampaign(businessId: number, payload: Partial<Campaign>) {
@@ -289,7 +274,7 @@ export function createCampaign(businessId: number, payload: Partial<Campaign>) {
   return request<Campaign>(`${BASE}/business/${businessId}/campaigns?user_id=${userId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   })
 }
 
@@ -315,7 +300,7 @@ export function approveOutbox(messageId: number) {
   return request<OutboundMessage>(`${BASE}/outbox/${messageId}/approve?user_id=${userId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ approved: true })
+    body: JSON.stringify({ approved: true }),
   })
 }
 
