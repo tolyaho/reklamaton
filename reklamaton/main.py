@@ -1,9 +1,8 @@
-# main.py
-
 import csv
 import glob
 import io
 import json
+import logging
 import os
 import threading
 from datetime import datetime, timedelta
@@ -62,14 +61,31 @@ from ad_gen import generate_ad_message
 
 from image_gen import OpenAIImageAPI
 
+logger = logging.getLogger(__name__)
+
+
+def _cors_origins() -> list[str]:
+    raw = (os.getenv("CORS_ORIGINS") or "").strip()
+    if raw:
+        return [o.strip() for o in raw.split(",") if o.strip()]
+    return [
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+    ]
+
+
 # --- filesystem ---
 os.makedirs("static/avatars", exist_ok=True)
 
 # --- app ---
-app = FastAPI()
+app = FastAPI(
+    title="Reklamaton API",
+    description="Sales automation MVP: customers, campaigns, AI chat, and outbound drafts.",
+    version="1.0.0",
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5174", "http://127.0.0.1:5174"],
+    allow_origins=_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -224,7 +240,7 @@ def generate_avatar_image_async(avatar_id: int, image_prompt: str):
 
     except Exception as e:
         _set_avatar_status(avatar_id, "failed")
-        print("Avatar generation failed:", e)
+        logger.exception("Avatar generation failed")
 
 
 def generate_avatar_image_with_timeout(avatar_id: int, image_prompt: str):
@@ -271,12 +287,12 @@ def on_startup():
     if os.getenv("OPENAI_API_KEY"):
         try:
             image_client = OpenAIImageAPI()
-            print("OpenAI image client initialized")
+            logger.info("OpenAI image client initialized")
         except Exception as e:
             image_client = None
-            print(f"OpenAI image generation disabled: {e}")
+            logger.warning("OpenAI image generation disabled: %s", e)
     else:
-        print("OPENAI_API_KEY not set - image generation disabled")
+        logger.info("OPENAI_API_KEY not set — image generation disabled")
 
     queue_system_avatar_generation()
 
