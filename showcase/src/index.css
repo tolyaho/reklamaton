@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+/* Reklamaton design tokens. Warm paper, dark ink, one accent (coral) for brand and change,
+   indigo for model/AI-derived data, sage for approval, amber for objections. */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+  --color-paper: #f6f2ea;
+  --color-paper-2: #efe9de;
+  --color-surface: #fffdf9;
+  --color-surface-2: #faf7f1;
+  --color-ink: #1f1c17;
+  --color-ink-2: #48433b;
+  --color-ink-3: #686157;
+  --color-line: #e3dbcd;
+  --color-line-strong: #cbc0ad;
+
+  --color-coral: #c4502e;
+  --color-coral-ink: #a03f21;
+  --color-coral-soft: #f8e3d8;
+  --color-indigo: #434e98;
+  --color-indigo-soft: #e6e8f5;
+  --color-sage: #366b4e;
+  --color-sage-soft: #dfece3;
+  --color-amber: #8c5b0c;
+  --color-amber-soft: #f5e9d1;
+  --color-rose: #94394a;
+  --color-rose-soft: #f4e0e3;
+
+  --radius-ctl: 0.625rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
+
+  --shadow-card: 0 1px 0 rgb(31 28 23 / 0.04), 0 12px 32px -20px rgb(31 28 23 / 0.3);
+  --shadow-pop: 0 1px 0 rgb(31 28 23 / 0.05), 0 24px 48px -24px rgb(31 28 23 / 0.38);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7);
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    text-rendering: optimizeLegibility;
+  }
+  /* A faint paper grain keeps large ivory areas from looking flat. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.1 0 0 0 0 0.08 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-indigo);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--color-coral-soft);
+    color: var(--color-ink);
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-variation-settings: "SOFT" 50, "WONK" 0;
+  }
+  .surface {
+    @apply bg-surface border border-line rounded-card;
+    box-shadow: var(--shadow-card);
+  }
+  .satin {
+    background: linear-gradient(180deg, #fffefb 0%, #f9f5ee 100%);
+    box-shadow: var(--shadow-inset), var(--shadow-card);
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+.typing-dot {
+  animation: typing-dot 1.1s var(--ease-soft) infinite;
+}
+
+@keyframes flash-ring {
+  0% { box-shadow: 0 0 0 0 rgb(196 80 46 / 0.45); }
+  100% { box-shadow: 0 0 0 10px rgb(196 80 46 / 0); }
+}
+.flash-ring {
+  animation: flash-ring 900ms var(--ease-soft) 2;
+}
