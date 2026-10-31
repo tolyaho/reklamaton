@@ -1,21 +1,15 @@
-from dataclasses import dataclass
-from typing import Iterator
+from typing import Iterable, Iterator
 
-from assistant_api import assistant_chat_stream, assistant_chat_sync, create_new_thread
-
-
-@dataclass
-class _PromptCarrier:
-    prompt: str
+from assistant_api import chat_reply, chat_reply_stream, new_conversation_id
 
 
 def create_conversation() -> str:
-    return create_new_thread()
+    return new_conversation_id()
 
 
-def chat_sync(conversation_id: str, instructions: str, user_msg: str) -> str:
-    return assistant_chat_sync(conversation_id, _PromptCarrier(prompt=instructions), user_msg)
+def chat_sync(instructions: str, history: Iterable, user_msg: str) -> str:
+    return chat_reply(instructions, history, user_msg)
 
 
-def chat_stream(conversation_id: str, instructions: str, user_msg: str) -> Iterator[str]:
-    return assistant_chat_stream(conversation_id, _PromptCarrier(prompt=instructions), user_msg)
+def chat_stream(instructions: str, history: Iterable, user_msg: str) -> Iterator[str]:
+    return chat_reply_stream(instructions, history, user_msg)

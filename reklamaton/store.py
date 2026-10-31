@@ -329,6 +329,15 @@ def is_rate_limited_approval(session: Session, customer_id: int) -> bool:
     return recent is not None
 
 
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def csv_safe_cell(value: Optional[str]) -> str:
+    """Text for a CSV cell that a spreadsheet will not evaluate as a formula (OWASP CSV injection)."""
+    text = "" if value is None else str(value)
+    return "'" + text if text.startswith(_FORMULA_PREFIXES) else text
+
+
 def parse_json_list(raw: Optional[str]) -> list[str]:
     if not raw:
         return []

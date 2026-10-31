@@ -21,3 +21,21 @@ def session():
     SQLModel.metadata.create_all(engine)
     with Session(engine) as s:
         yield s
+
+
+@pytest.fixture(scope="session")
+def client(tmp_path_factory):
+    """The real FastAPI app through TestClient, in a temporary working directory (keyless)."""
+    import importlib
+
+    from fastapi.testclient import TestClient
+
+    workdir = tmp_path_factory.mktemp("api")
+    cwd = os.getcwd()
+    os.chdir(workdir)  # database.db and static/ are created relative to the working directory
+    try:
+        main = importlib.import_module("main")
+        with TestClient(main.app) as c:
+            yield c
+    finally:
+        os.chdir(cwd)

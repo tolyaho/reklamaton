@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
+from pydantic import Field as Limit
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -10,9 +11,15 @@ LeadStage = str
 OutboundStatus = str
 Channel = str
 
+# Request-size limits. Every free-text field ends up in a prompt or the database.
+MAX_CHAT_MESSAGE_CHARS = 4000
+_NAME = 200
+_SHORT = 64
+_TEXT = 2000
+
 
 class UserCreate(BaseModel):
-    username: str
+    username: str = Limit(min_length=1, max_length=320)
     age: Optional[int] = None
     sex: Optional[str] = None
 
@@ -26,15 +33,15 @@ class UserRead(UserCreate):
 
 
 class AvatarCreate(BaseModel):
-    name: str
-    url: str | None = None
-    personality: str | None = None
-    features: str | None = None
-    age: int | None = None
+    name: str = Limit(min_length=1, max_length=_NAME)
+    url: str | None = Limit(default=None, max_length=_TEXT)
+    personality: str | None = Limit(default=None, max_length=_TEXT)
+    features: str | None = Limit(default=None, max_length=_TEXT)
+    age: int | None = Limit(default=None, ge=0, le=150)
     is_system: bool | None = None
-    gender: str | None = None
-    hobbies: str | None = None
-    prompt: str | None = None
+    gender: str | None = Limit(default=None, max_length=_SHORT)
+    hobbies: str | None = Limit(default=None, max_length=_TEXT)
+    prompt: str | None = Limit(default=None, max_length=_TEXT)
 
 
 class AvatarRead(AvatarCreate):
@@ -52,7 +59,7 @@ class AvatarRead(AvatarCreate):
 
 class ChatRequest(BaseModel):
     avatar_id: int
-    message: str
+    message: str = Limit(min_length=1, max_length=MAX_CHAT_MESSAGE_CHARS)
 
 
 class ChatResponse(BaseModel):
@@ -72,17 +79,17 @@ class MessageRead(BaseModel):
 
 
 class BusinessCreate(BaseModel):
-    name: str = "My Business"
-    brand_voice: str = "Friendly and helpful sales assistant"
-    products_json: str = "[]"
-    timezone: str = "Europe/Moscow"
+    name: str = Limit(default="My Business", max_length=_NAME)
+    brand_voice: str = Limit(default="Friendly and helpful sales assistant", max_length=_TEXT)
+    products_json: str = Limit(default="[]", max_length=20000)
+    timezone: str = Limit(default="Europe/Moscow", max_length=_SHORT)
 
 
 class BusinessUpdate(BaseModel):
-    name: Optional[str] = None
-    brand_voice: Optional[str] = None
-    products_json: Optional[str] = None
-    timezone: Optional[str] = None
+    name: Optional[str] = Limit(default=None, max_length=_NAME)
+    brand_voice: Optional[str] = Limit(default=None, max_length=_TEXT)
+    products_json: Optional[str] = Limit(default=None, max_length=20000)
+    timezone: Optional[str] = Limit(default=None, max_length=_SHORT)
 
 
 class BusinessRead(BaseModel):
@@ -99,19 +106,19 @@ class BusinessRead(BaseModel):
 
 
 class CustomerUpsert(BaseModel):
-    external_id: Optional[str] = None
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    preferred_channel: Optional[str] = None
+    external_id: Optional[str] = Limit(default=None, max_length=_NAME)
+    name: Optional[str] = Limit(default=None, max_length=_NAME)
+    phone: Optional[str] = Limit(default=None, max_length=_SHORT)
+    email: Optional[str] = Limit(default=None, max_length=320)
+    preferred_channel: Optional[str] = Limit(default=None, max_length=_SHORT)
     marketing_opt_in: Optional[bool] = None
 
 
 class CustomerUpdate(BaseModel):
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    preferred_channel: Optional[str] = None
+    name: Optional[str] = Limit(default=None, max_length=_NAME)
+    phone: Optional[str] = Limit(default=None, max_length=_SHORT)
+    email: Optional[str] = Limit(default=None, max_length=320)
+    preferred_channel: Optional[str] = Limit(default=None, max_length=_SHORT)
     marketing_opt_in: Optional[bool] = None
 
 
@@ -152,12 +159,12 @@ class CustomerProfileRead(BaseModel):
 
 
 class CampaignCreate(BaseModel):
-    name: str
-    objective: str
-    offer_text: str
-    channel: str
-    segment_json: str = "{}"
-    status: str = "draft"
+    name: str = Limit(min_length=1, max_length=_NAME)
+    objective: str = Limit(max_length=_TEXT)
+    offer_text: str = Limit(max_length=_TEXT)
+    channel: str = Limit(max_length=_SHORT)
+    segment_json: str = Limit(default="{}", max_length=_TEXT)
+    status: str = Limit(default="draft", max_length=_SHORT)
 
 
 class CampaignRead(BaseModel):

@@ -127,11 +127,13 @@ export function createChat(userId: number, avatarId: number): Promise<ChatSessio
 // Messages
 
 export function listMessages(chatId: number): Promise<ApiMessage[]> {
-  return request<ApiMessage[]>(`${BASE}/chats/${chatId}/messages/`)
+  const userId = currentUserIdFromStorage()
+  return request<ApiMessage[]>(`${BASE}/chats/${chatId}/messages/?user_id=${userId}`)
 }
 
 export function sendMessage(chatId: number, avatarId: number, message: string): Promise<{ reply: string }> {
-  return request(`${BASE}/api/assistant/${chatId}/`, {
+  const userId = currentUserIdFromStorage()
+  return request(`${BASE}/api/assistant/${chatId}/?user_id=${userId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ avatar_id: avatarId, message }),

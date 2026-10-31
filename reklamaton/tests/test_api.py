@@ -1,23 +1,5 @@
 """End-to-end API checks through FastAPI's TestClient, keyless, in a temporary working directory."""
-import importlib
-
 import pytest
-from fastapi.testclient import TestClient
-
-
-@pytest.fixture(scope="module")
-def client(tmp_path_factory):
-    import os
-
-    workdir = tmp_path_factory.mktemp("api")
-    cwd = os.getcwd()
-    os.chdir(workdir)  # database.db and static/ are created relative to the working directory
-    try:
-        main = importlib.import_module("main")
-        with TestClient(main.app) as c:
-            yield c
-    finally:
-        os.chdir(cwd)
 
 
 @pytest.fixture(scope="module")
