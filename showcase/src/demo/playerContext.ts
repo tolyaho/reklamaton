@@ -3,7 +3,8 @@ import { createContext, useContext } from "react"
 export interface Playback {
   chatId: number
   turn: number
-  phase: "customer" | "typing" | "streaming" | "extracting"
+  /** "customer": the customer's message is shown; "reply": the persona's scripted reply is shown too. */
+  phase: "customer" | "reply"
   customer: string
   reply: string
 }
