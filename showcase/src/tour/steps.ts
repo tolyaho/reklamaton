@@ -26,7 +26,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "workspace",
     route: "/app/overview",
-    target: "kpis",
+    target: "workspace",
     title: "A fictional studio's workspace",
     body: "Studio Halden sells brand and packaging design. Its customers, chats and campaigns are synthetic, and every number on this page is counted from them.",
   },

@@ -33,9 +33,16 @@
   --radius-card: 1rem;
   --radius-panel: 1.25rem;
 
+  /* Highlighter tints for customer facts: interest, budget, concern, intent. */
+  --color-fact-interest: #d8dcf3;
+  --color-fact-budget: #f5d3c2;
+  --color-fact-concern: #efdcb3;
+  --color-fact-intent: #cfe4d6;
+
   --shadow-card: 0 1px 0 rgb(31 28 23 / 0.04), 0 12px 32px -20px rgb(31 28 23 / 0.3);
   --shadow-pop: 0 1px 0 rgb(31 28 23 / 0.05), 0 24px 48px -24px rgb(31 28 23 / 0.38);
   --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --shadow-window: 0 0 0 1px rgb(31 28 23 / 0.07), 0 2px 4px -2px rgb(31 28 23 / 0.08), 0 30px 70px -30px rgb(31 28 23 / 0.38);
 
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -96,6 +103,55 @@
     scrollbar-width: thin;
     scrollbar-color: var(--color-line-strong) transparent;
   }
+
+  /* A customer fact inside running text: a highlighter stroke that sweeps in when it is revealed. */
+  .fact {
+    --fact: var(--color-fact-interest);
+    color: inherit;
+    background-color: transparent;
+    background-image: linear-gradient(var(--fact), var(--fact));
+    background-repeat: no-repeat;
+    background-position: 0 88%;
+    background-size: 0% 46%;
+    border-radius: 2px;
+    padding: 0 1px;
+    margin: 0 -1px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    transition: background-size 650ms var(--ease-soft), box-shadow 300ms var(--ease-soft);
+  }
+  .fact[data-on="true"] {
+    background-size: 100% 46%;
+  }
+  .fact[data-active="true"] {
+    background-size: 100% 100%;
+    box-shadow: 0 0 0 2px var(--fact);
+  }
+  .fact-interest { --fact: var(--color-fact-interest); }
+  .fact-budget { --fact: var(--color-fact-budget); }
+  .fact-concern { --fact: var(--color-fact-concern); }
+  .fact-intent { --fact: var(--color-fact-intent); }
+  .fact-context { --fact: var(--color-paper-2); }
+  /* On dark bubbles the tint stays legible as a thin underline instead of a fill. */
+  .on-ink .fact {
+    background-size: 0% 2px;
+    background-position: 0 100%;
+  }
+  .on-ink .fact[data-on="true"] {
+    background-size: 100% 2px;
+  }
+
+  .window {
+    @apply overflow-hidden rounded-[18px] bg-surface;
+    box-shadow: var(--shadow-window);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 96;
+    font-variant-numeric: lining-nums;
+    letter-spacing: -0.032em;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -113,6 +169,14 @@
 }
 .typing-dot {
   animation: typing-dot 1.1s var(--ease-soft) infinite;
+}
+
+@keyframes glow-in {
+  0% { box-shadow: 0 0 0 0 var(--glow, rgb(196 80 46 / 0.4)); }
+  100% { box-shadow: 0 0 0 8px rgb(255 255 255 / 0); }
+}
+.glow-in {
+  animation: glow-in 1100ms var(--ease-soft) 1;
 }
 
 @keyframes flash-ring {

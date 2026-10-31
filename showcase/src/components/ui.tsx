@@ -145,18 +145,6 @@ export function Provenance({ kind, children, className }: { kind: ProvenanceKind
 
 // ---------- Layout bits ----------
 
-export function PageHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <h1 className="font-display text-[28px] leading-tight font-semibold tracking-[-0.01em] text-ink sm:text-[32px]">{title}</h1>
-        {description && <p className="mt-1 max-w-2xl text-[14px] text-ink-3">{description}</p>}
-      </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-    </div>
-  )
-}
-
 export function Panel({
   title,
   description,

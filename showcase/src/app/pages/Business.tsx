@@ -4,7 +4,8 @@ import { toast } from "sonner"
 import { PageFade } from "@/app/AppShell"
 import { PromptView } from "@/components/PromptView"
 import { Sheet } from "@/components/Sheet"
-import { Button, PageHeader, Panel, PersonaMark, Provenance } from "@/components/ui"
+import { PageHeader } from "@/app/PageHeader"
+import { Button, Panel, PersonaMark, Provenance } from "@/components/ui"
 import { cx } from "@/lib/styles"
 import { useDemo } from "@/demo/context"
 import { buildAvatarPrompt, buildSalesPrompt } from "@/demo/prompt"
@@ -22,7 +23,7 @@ export function Business() {
     <PageFade>
       <PageHeader
         title="Business"
-        description="The context every chat reply and every draft is written from."
+        meta="The context every chat reply and every draft is written from"
         actions={
           <Button
             variant="primary"
@@ -39,10 +40,10 @@ export function Business() {
 
       <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <div className="flex flex-col gap-4">
-          <section className="surface satin overflow-hidden">
-            <div className="p-5">
+          <section className="surface overflow-hidden">
+            <div className="p-5 sm:p-6">
               <p className="eyebrow">Business profile</p>
-              <h2 className="mt-1 font-display text-[26px] leading-tight font-semibold text-ink">{b.name}</h2>
+              <h2 className="display mt-1.5 text-[30px] leading-tight font-semibold text-ink">{b.name}</h2>
               <p className="mt-1 text-[13.5px] text-ink-3">{b.tagline}</p>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-[13px]">
                 <div className="flex items-center gap-2 text-ink-2">
@@ -57,9 +58,9 @@ export function Business() {
                 </div>
               </dl>
             </div>
-            <div className="border-t border-line bg-surface-2/80 p-5">
+            <div className="border-t border-line bg-surface-2/80 p-5 sm:p-6">
               <p className="eyebrow">Brand voice</p>
-              <blockquote className="mt-2 border-l-2 border-coral pl-3 font-display text-[17px] leading-snug text-ink italic">“{b.brand_voice}”</blockquote>
+              <blockquote className="display mt-2 border-l-2 border-coral pl-4 text-[19px] leading-snug text-ink italic">“{b.brand_voice}”</blockquote>
               <p className="mt-3 text-[12.5px] text-ink-3">
                 Sent with every chat turn (sales prompt) and every draft (copywriter prompt).
               </p>
@@ -91,7 +92,7 @@ export function Business() {
           description="Prices, durations and terms the assistant may quote. Anything not here, it must not promise."
           actions={
             <Button size="sm" variant="secondary" aria-pressed={json} onClick={() => setJson((v) => !v)} data-testid="toggle-products-json">
-              <Braces aria-hidden /> {json ? "Cards" : "products_json"}
+              <Braces aria-hidden /> {json ? "List" : "products_json"}
             </Button>
           }
         >
@@ -100,15 +101,16 @@ export function Business() {
               {JSON.stringify(b.products, null, 2)}
             </pre>
           ) : (
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className="divide-y divide-line">
               {b.products.map((p) => (
-                <li key={p.name} className="flex flex-col rounded-card border border-line bg-surface-2 p-4 transition-shadow duration-200 hover:shadow-card">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-[14.5px] font-semibold text-ink">{p.name}</p>
-                    <p className={cx("num shrink-0 text-[13.5px] font-semibold", p.price === "free" ? "text-sage" : "text-coral-ink")}>{p.price}</p>
+                <li key={p.name} className="grid gap-x-6 gap-y-1 py-3.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <div className="min-w-0">
+                    <p className="text-[14.5px] font-semibold text-ink">
+                      {p.name} <span className="ml-1 text-[12.5px] font-normal text-ink-3">{p.duration}</span>
+                    </p>
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-ink-2">{p.description}</p>
                   </div>
-                  <p className="mt-0.5 text-[12px] text-ink-3">{p.duration}</p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-ink-2">{p.description}</p>
+                  <p className={cx("num text-[14px] font-semibold sm:text-right", p.price === "free" ? "text-sage" : "text-ink")}>{p.price}</p>
                 </li>
               ))}
             </ul>
