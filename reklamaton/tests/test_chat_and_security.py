@@ -281,6 +281,7 @@ def test_csv_export_neutralises_spreadsheet_formulas(client, tenant, monkeypatch
     client.post(f"/outbox/{drafts[0]['id']}/approve?user_id={user_id}", json={"approved": True})
     rows = list(csv.DictReader(io.StringIO(client.get(f"/outbox/export.csv?campaign_id={campaign_id}&user_id={user_id}").text)))
     assert rows[0]["content"].startswith("'=")
+    assert rows[0]["customer_name"] == "Formula" and rows[0]["contact"].endswith("@example.com")
 
 
 def test_draft_generation_is_capped_per_request(client, tenant, monkeypatch):

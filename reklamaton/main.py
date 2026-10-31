@@ -269,7 +269,7 @@ def generate_avatar_image_async(avatar_id: int, image_prompt: str):
         fname = os.path.basename(saved[0])
         _set_avatar_status(avatar_id, "ready", f"/static/avatars/{fname}")
 
-    except Exception as e:
+    except Exception:
         _set_avatar_status(avatar_id, "failed")
         logger.exception("Avatar generation failed")
 
@@ -777,7 +777,7 @@ def export_outbox_csv(
         raise HTTPException(404, "Campaign not found")
     _assert_business_owner(session, campaign.business_id, user_id)
     rows = session.exec(
-        select(OutboundMessage)
+        select(OutboundMessage, Customer)
         .join(Customer, Customer.id == OutboundMessage.customer_id)
         .where(
             OutboundMessage.campaign_id == campaign_id,
@@ -788,11 +788,13 @@ def export_outbox_csv(
     ).all()
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["id", "campaign_id", "customer_id", "channel", "content", "status", "approved_at"])
-    for m in rows:
-        # Message text comes from a model and from customer data: neutralise spreadsheet formulas.
-        writer.writerow([m.id, m.campaign_id, m.customer_id, m.channel, csv_safe_cell(m.content), m.status,
-                         m.approved_at or ""])
+    writer.writerow(["id", "campaign_id", "customer_id", "customer_name", "contact", "channel", "content", "status",
+                     "approved_at"])
+    for m, customer in rows:
+        contact = (customer.email if m.channel == "email" else customer.phone) or customer.email or customer.phone or ""
+        # Text comes from a model and from customer data: neutralise anything a spreadsheet would run as a formula.
+        writer.writerow([m.id, m.campaign_id, m.customer_id, csv_safe_cell(customer.name), csv_safe_cell(contact),
+                         m.channel, csv_safe_cell(m.content), m.status, m.approved_at or ""])
     data = io.BytesIO(buf.getvalue().encode("utf-8"))
     return StreamingResponse(
         data,

@@ -47,4 +47,4 @@ def test_csv_export_contains_only_approved_messages(client, ids):
                        json={"name": "c2", "objective": "o", "offer_text": "x", "channel": "email"}).json()
     r = client.get(f"/outbox/export.csv?campaign_id={camp['id']}&user_id={user_id}")
     assert r.status_code == 200
-    assert r.text.strip().splitlines() == ["id,campaign_id,customer_id,channel,content,status,approved_at"]
+    assert r.text.strip().splitlines() == ["id,campaign_id,customer_id,customer_name,contact,channel,content,status,approved_at"]
