@@ -14,3 +14,8 @@ reklamaton/database.db
 reklamaton/venv/
 venv/
 static/
+.venv/
+*.db
+*.sqlite3
+.env.*
+!.env.example
