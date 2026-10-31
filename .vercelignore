@@ -8,3 +8,5 @@ showcase/dist
 showcase/test-results
 showcase/playwright-report
 showcase/scripts/out
+.env*
+.vercel
