@@ -87,6 +87,7 @@ export function Modal({
   description,
   children,
   testId,
+  width = "max-w-lg",
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -94,6 +95,7 @@ export function Modal({
   description?: ReactNode
   children: ReactNode
   testId?: string
+  width?: string
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -113,7 +115,7 @@ export function Modal({
               <Dialog.Content asChild forceMount>
                 <motion.div
                   data-testid={testId}
-                  className="scroll-thin pointer-events-auto max-h-[88dvh] w-full max-w-lg overflow-y-auto rounded-panel border border-line bg-surface shadow-pop outline-none"
+                  className={cx("scroll-thin pointer-events-auto max-h-[88dvh] w-full overflow-y-auto rounded-panel border border-line bg-surface shadow-pop outline-none", width)}
                   initial={{ opacity: 0, y: 12, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.98 }}

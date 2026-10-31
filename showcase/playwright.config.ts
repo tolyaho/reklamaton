@@ -14,6 +14,13 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? `http://localhost:${PORT}`,
     trace: "retain-on-failure",
     acceptDownloads: true,
+    // Lets the suite run against a protected Vercel preview (BASE_URL=https://…vercel.app).
+    extraHTTPHeaders: process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+      ? {
+          "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
+          "x-vercel-set-bypass-cookie": "true",
+        }
+      : undefined,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } }],
   // Tests run against the production build, served exactly as Vercel would serve dist/.

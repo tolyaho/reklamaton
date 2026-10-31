@@ -115,6 +115,11 @@ test("drafts, approval rules and CSV export use the current state", async ({ pag
   await expect(page.getByTestId("block-2")).toContainText("Rate limit")
   await expect(page.getByTestId("draft-2")).toContainText("Draft")
 
+  await page.getByTestId("preview-csv").click()
+  await expect(page.getByTestId("csv-preview")).toContainText("ines.calder@example.com")
+  await expect(page.getByTestId("csv-preview")).not.toContainText("Theo Marchetti")
+  await page.keyboard.press("Escape")
+
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("export-csv").click()])
   expect(download.suggestedFilename()).toBe("outbox_campaign_1.csv")
   const csv = await readFile((await download.path())!, "utf8")

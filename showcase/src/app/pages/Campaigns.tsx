@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Copy,
   Download,
+  Eye,
   FileText,
   Lock,
   Megaphone,
@@ -18,11 +19,12 @@ import { useState } from "react"
 import { Link, Navigate, useParams } from "react-router"
 import { toast } from "sonner"
 import { PageFade } from "@/app/AppShell"
+import { Modal } from "@/components/Sheet"
 import { Avatar, Badge, Button, EmptyState, PageHeader, Panel, Provenance, StageBadge } from "@/components/ui"
 import { cx } from "@/lib/styles"
 import { channelLimit } from "@/demo/compose"
 import { useDemo } from "@/demo/context"
-import { buildOutboxCsv, csvFilename, exportRows } from "@/demo/csv"
+import { CSV_COLUMNS, buildOutboxCsv, contactFor, csvFilename, exportRows } from "@/demo/csv"
 import { approvalBlock, segmentJson, segmentRecipients } from "@/demo/engine"
 import { outboxForCampaign } from "@/demo/state"
 import { LEAD_STAGES, type Campaign, type OutboundMessage, type OutboundStatus, type Segment } from "@/demo/types"
@@ -48,6 +50,7 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
   const reduced = useReducedMotion()
   const [filter, setFilter] = useState<OutboundStatus | "all">("all")
   const [lastExport, setLastExport] = useState<{ count: number; at: string; name: string } | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const messages = outboxForCampaign(state, campaign.id)
   const recipients = segmentRecipients(state, campaign)
   const matching = recipients.filter((r) => r.check.matches)
@@ -150,6 +153,9 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
               <Button variant="secondary" onClick={exportCsv} disabled={!exportable} data-tour="export" data-testid="export-csv">
                 <Download aria-hidden /> Export approved ({exportable})
               </Button>
+              <Button variant="ghost" onClick={() => setPreviewOpen(true)} disabled={!exportable} data-testid="preview-csv">
+                <Eye aria-hidden /> Preview
+              </Button>
               <Provenance kind="composer" className="ml-auto" />
             </div>
             <AnimatePresence>
@@ -210,7 +216,63 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
           )}
         </Panel>
       </div>
+
+      <Modal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        title={`${csvFilename(campaign.id)}`}
+        description="The rows the export contains right now: approved messages to customers who still have consent. Same columns as the backend's /outbox/export.csv."
+        testId="csv-preview"
+        width="max-w-4xl"
+      >
+        <CsvPreview campaignId={campaign.id} onDownload={exportCsv} />
+      </Modal>
     </PageFade>
+  )
+}
+
+function CsvPreview({ campaignId, onDownload }: { campaignId: number; onDownload: () => void }) {
+  const { state } = useDemo()
+  const rows = exportRows(state, campaignId)
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="scroll-thin max-h-[52vh] overflow-auto rounded-ctl border border-line">
+        <table className="w-full min-w-[720px] text-left text-[12px]">
+          <thead className="sticky top-0 bg-surface-2 font-mono text-[11px] text-ink-3">
+            <tr>
+              {CSV_COLUMNS.filter((c) => c !== "campaign_id" && c !== "status").map((c) => (
+                <th key={c} scope="col" className="border-b border-line px-2.5 py-2 font-medium">{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line align-top">
+            {rows.map((m) => {
+              const customer = state.customers.find((c) => c.id === m.customer_id)!
+              return (
+                <tr key={m.id}>
+                  <td className="num px-2.5 py-2 text-ink-3">{m.id}</td>
+                  <td className="num px-2.5 py-2 text-ink-3">{m.customer_id}</td>
+                  <td className="px-2.5 py-2 font-medium whitespace-nowrap text-ink">{customer.name}</td>
+                  <td className="px-2.5 py-2 text-ink-2">{contactFor(state, m.customer_id, m.channel)}</td>
+                  <td className="px-2.5 py-2 text-ink-2">{m.channel}</td>
+                  <td className="min-w-[300px] px-2.5 py-2 whitespace-pre-wrap text-ink">{m.content}</td>
+                  <td className="num px-2.5 py-2 whitespace-nowrap text-ink-3">{m.approved_at?.replace("T", " ").slice(0, 16)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[12px] text-ink-3">
+        The file also has <code className="font-mono">campaign_id</code> and <code className="font-mono">status</code> columns. It is UTF-8 with a
+        byte-order mark for spreadsheet apps, and cells that would run as formulas are prefixed with a quote.
+      </p>
+      <div className="flex justify-end">
+        <Button variant="primary" onClick={onDownload}>
+          <Download aria-hidden /> Download CSV
+        </Button>
+      </div>
+    </div>
   )
 }
 
