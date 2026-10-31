@@ -99,7 +99,7 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
         className="mt-4 flex flex-col gap-4 rounded-[18px] border border-line bg-surface-2 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
         aria-label="Campaign brief"
       >
-        <p className="display max-w-3xl text-[19px] leading-snug text-ink sm:text-[21px]">“{campaign.offer_text}”</p>
+        <p className="display-sm max-w-3xl text-[19px] leading-snug text-ink sm:text-[21px]">“{campaign.offer_text}”</p>
         <p className="shrink-0 text-[13px] text-ink-3">
           {CHANNEL_LABEL[campaign.channel]} · {channelLimit(campaign.channel)} characters max
         </p>
@@ -139,9 +139,9 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,370px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
         <AudiencePanel campaign={campaign} onPick={(customerId) => setPicked(messages.find((m) => m.customer_id === customerId)?.id ?? null)} />
 
-        <section id="review" className="surface flex min-w-0 scroll-mt-4 flex-col" data-testid="outbox" aria-label="Drafts">
-          <header className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 sm:px-5">
-            <div className="min-w-0 flex-1">
+        <section id="review" className="surface @container flex min-w-0 scroll-mt-4 flex-col" data-testid="outbox" aria-label="Drafts">
+          <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-4 py-3 sm:px-5">
+            <div className="w-full min-w-0 @md:w-auto @md:flex-1">
               <h2 className="text-[15px] font-semibold text-ink">Drafts</h2>
               <p className="num text-[12.5px] text-ink-3">
                 {counts.draft} draft · {counts.approved} approved · {counts.sent} marked as sent
@@ -156,13 +156,13 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
           </header>
 
           {!messages.length ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-14 text-center">
+            <div className="flex flex-col items-center gap-4 px-6 pt-16 pb-14 text-center">
               <span className="flex -space-x-2.5">
                 {matching.slice(0, 7).map((r) => (
                   <Avatar key={r.customer.id} id={r.customer.id} name={r.customer.name} size={40} className="ring-2 ring-surface" />
                 ))}
               </span>
-              <p className="display text-[24px] leading-tight font-semibold text-ink">
+              <p className="display-sm text-[24px] leading-tight font-semibold text-ink">
                 {matching.length ? `One personal draft for each of ${matching.length} customers` : "No one is in the audience yet"}
               </p>
               <Button variant="primary" size="lg" onClick={generate} disabled={!undrafted.length} data-tour="generate" data-testid="generate-drafts">
@@ -484,7 +484,7 @@ function AudiencePanel({ campaign, onPick }: { campaign: Campaign; onPick: (cust
                     >
                       <Avatar id={customer.id} name={customer.name} size={26} />
                       <span className="min-w-0 flex-1 truncate text-[13px] text-ink">{customer.name}</span>
-                      {recent === customer.id && <Badge tone="coral">updated from chat</Badge>}
+                      {recent === customer.id && <Badge tone="coral">from chat</Badge>}
                       <StageBadge stage={profile.lead_stage} />
                       {m && <span className={cx("size-2 rounded-full", STATUS_DOT[m.status])} aria-label={`${m.status}`} />}
                     </button>

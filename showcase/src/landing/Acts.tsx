@@ -496,7 +496,7 @@ export function ActCampaign() {
                   <Avatar key={r.customer.id} id={r.customer.id} name={r.customer.name} size={42} className="ring-2 ring-surface" />
                 ))}
               </span>
-              <p className="display max-w-sm text-[22px] leading-tight font-semibold text-ink">
+              <p className="display-sm max-w-sm text-[22px] leading-tight font-semibold text-ink">
                 {ines.check.matches ? "Ines is in. Write one draft per customer." : `${plural(matching.length, "customer")} in the audience.`}
               </p>
               <Button variant="primary" size="lg" onClick={generate} disabled={!undrafted.length} data-testid="story-generate">

@@ -11,7 +11,7 @@ const ROWS: { kind: ProvenanceKind; label?: string; title: string; body: string 
   {
     kind: "scripted",
     title: "Scripted conversation",
-    body: "Ines's four turns, the persona's replies and the profile patch after each turn are written for the demo. They are not model output.",
+    body: "Ines's four turns, the persona's replies and the profile patch after each turn are written for the demo. They are not model output. The replay on the landing page plays the same script.",
   },
   {
     kind: "composer",

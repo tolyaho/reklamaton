@@ -60,7 +60,7 @@ export function Business() {
             </div>
             <div className="border-t border-line bg-surface-2/80 p-5 sm:p-6">
               <p className="eyebrow">Brand voice</p>
-              <blockquote className="display mt-2 border-l-2 border-coral pl-4 text-[19px] leading-snug text-ink italic">“{b.brand_voice}”</blockquote>
+              <blockquote className="display-sm mt-2 border-l-2 border-coral pl-4 text-[19px] leading-snug text-ink italic">“{b.brand_voice}”</blockquote>
               <p className="mt-3 text-[12.5px] text-ink-3">
                 Sent with every chat turn (sales prompt) and every draft (copywriter prompt).
               </p>

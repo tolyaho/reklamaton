@@ -130,13 +130,12 @@ export function DraftView({ message, onApproved, size = "md" }: { message: Outbo
                   onBlur={() => setFocus(null)}
                   title={f.effect}
                   className={cx(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-left text-[12px] leading-4 transition-colors",
+                    "rounded-[14px] border px-2.5 py-1 text-left text-[12px] leading-[18px] transition-colors",
                     marked ? cx("bg-surface hover:bg-paper-2", FACT_TONE[kind].border) : "cursor-default border-line bg-surface text-ink-3",
                   )}
                 >
-                  <span aria-hidden className={cx("size-2 rounded-full", FACT_TONE[kind].dot)} />
-                  <span className="font-semibold text-ink">{f.label}</span>
-                  <span className="text-ink-3">{f.effect}</span>
+                  <span aria-hidden className={cx("mr-1.5 inline-block size-2 rounded-full align-[1px]", FACT_TONE[kind].dot)} />
+                  <span className="font-semibold text-ink">{f.label}</span> <span className="text-ink-3">{f.effect}</span>
                 </button>
               </li>
             )

@@ -99,7 +99,7 @@ export function HeroReel() {
             className="h-[540px] sm:h-[580px] lg:h-[clamp(470px,calc(100dvh-150px),600px)]"
             bodyClassName="flex flex-col"
           >
-            <div className="grid min-h-0 flex-1 @2xl:grid-cols-[minmax(0,1fr)_minmax(250px,288px)]">
+            <div className="grid min-h-0 flex-1 @xl:grid-cols-[minmax(0,1fr)_minmax(236px,288px)]">
               <div className="relative flex min-h-0 flex-col">
                 <div className="flex items-center gap-3 border-b border-line px-4 py-2.5">
                   <Avatar id={1} name="Ines Calder" size={32} />
@@ -148,7 +148,7 @@ export function HeroReel() {
                 </AnimatePresence>
               </div>
 
-              <div className="hidden min-h-0 flex-col overflow-hidden border-l border-line bg-surface-2/50 @2xl:flex">
+              <div className="hidden min-h-0 flex-col overflow-hidden border-l border-line bg-surface-2/50 @xl:flex">
                 <p className="border-b border-line px-4 py-2.5 text-[12px] font-semibold text-ink">Customer memory</p>
                 <div className="scroll-thin min-h-0 flex-1 overflow-hidden">
                   <Memory customerId={1} variant="compact" announce={false} />
@@ -173,8 +173,15 @@ export function HeroReel() {
                     <span className="relative h-1 overflow-hidden rounded-full bg-line">
                       <span className="absolute inset-y-0 left-0 rounded-full bg-ink transition-[width] duration-500" style={{ width: `${done * 100}%` }} />
                     </span>
-                    <span className={cx("text-[10.5px] font-medium", i === current ? "text-ink" : "text-ink-3 group-hover:text-ink-2")}>
-                      {i < 4 ? `Message ${label}` : "Draft"}
+                    <span className={cx("text-[10.5px] font-medium whitespace-nowrap", i === current ? "text-ink" : "text-ink-3 group-hover:text-ink-2")}>
+                      {i < 4 ? (
+                        <>
+                          <span className="hidden @md:inline">Message </span>
+                          {label}
+                        </>
+                      ) : (
+                        "Draft"
+                      )}
                     </span>
                   </button>
                 )
@@ -221,7 +228,7 @@ function MemoryStrip({ state, beat }: { state: DemoState; beat: Beat }) {
   const fresh = beat.kind === "learn" ? new Set(state.lastProfileChange?.changes.map((c) => c.field)) : new Set<string>()
   const glow = (f: string) => (fresh.has(f) ? "ring-2 ring-offset-1 ring-offset-surface-2 ring-ink/20" : "")
   return (
-    <div className="flex flex-wrap items-center gap-1.5 border-t border-line bg-surface-2/70 px-3 py-2.5 @2xl:hidden" aria-label="Customer memory">
+    <div className="flex flex-wrap items-center gap-1.5 border-t border-line bg-surface-2/70 px-3 py-2.5 @xl:hidden" aria-label="Customer memory">
       <span className={cx("rounded-full", glow("lead_stage"))}>
         <StageBadge stage={p.lead_stage} />
       </span>

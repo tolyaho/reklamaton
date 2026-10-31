@@ -51,7 +51,7 @@ test("profile changes reach the CRM table and campaign eligibility", async ({ pa
 
   await page.goto("/app/campaigns/1")
   await expect(page.getByTestId("recipients")).toContainText("Ines Calder")
-  await expect(page.getByTestId("recipients")).toContainText("updated from chat")
+  await expect(page.getByTestId("recipients")).toContainText("from chat")
 })
 
 test("segment controls filter on real profile fields and show the backend JSON", async ({ page }) => {

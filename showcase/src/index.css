@@ -152,6 +152,12 @@
     font-variant-numeric: lining-nums;
     letter-spacing: -0.032em;
   }
+  /* Display face at reading sizes: the font's own optical size, gentler tracking. */
+  .display-sm {
+    font-family: var(--font-display);
+    font-variant-numeric: lining-nums;
+    letter-spacing: -0.012em;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
