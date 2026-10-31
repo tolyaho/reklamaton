@@ -12,7 +12,7 @@ export default function Hero({ isAuthed, onPrimaryCta, onSecondaryCta }: HeroPro
     <Stagger className="flex flex-col items-center gap-6 pb-8 pt-16 text-center sm:pt-24" stagger={0.08} delay={0.1}>
       <StaggerItem>
         <div className="inline-flex items-center rounded-full border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-          MVP &mdash; Early Access
+          MVP &mdash; runs locally
         </div>
       </StaggerItem>
       <StaggerItem>
@@ -25,8 +25,8 @@ export default function Hero({ isAuthed, onPrimaryCta, onSecondaryCta }: HeroPro
       </StaggerItem>
       <StaggerItem>
         <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl">
-          Turn conversations into qualified leads. Auto-learn customer preferences, draft compliant outreach messages, and
-          export campaigns in minutes.
+          Turn conversations into qualified leads. Learn customer preferences from chats, draft consent-checked outreach
+          messages, and export the approved ones as CSV.
         </p>
       </StaggerItem>
       <StaggerItem>

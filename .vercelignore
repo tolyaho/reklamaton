@@ -1,0 +1,12 @@
+# The Vercel project builds only showcase/ (Root Directory). Don't upload the rest.
+/reklamaton
+/my-app
+/docs
+/.github
+**/node_modules
+showcase/dist
+showcase/test-results
+showcase/playwright-report
+showcase/scripts/out
+.env*
+.vercel

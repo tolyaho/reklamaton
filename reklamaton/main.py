@@ -34,6 +34,7 @@ from models import (
     Campaign, CampaignCreate, CampaignRead,
     OutboundMessage, OutboundMessageRead,
     ApproveRequest,
+    MAX_CHAT_MESSAGE_CHARS,
 )
 from store import (
     create_chat_session,
@@ -53,15 +54,24 @@ from store import (
     approve_outbound,
     mark_sent_outbound,
     is_rate_limited_approval,
+    parse_json_list,
+    customer_matches_segment,
+    csv_safe_cell,
 )
 from llm import create_conversation, chat_sync, chat_stream
+from assistant_api import HISTORY_LIMIT, OpenAIConfigError
 from prompter import build_avatar_prompt, build_image_prompt, build_sales_prompt
 from profile_extractor import extract_profile_patch
-from ad_gen import generate_ad_message
+from ad_gen import generate_ad_message, llm_configured
 
 from image_gen import OpenAIImageAPI
 
 logger = logging.getLogger(__name__)
+
+# Upper bound on drafts written by one "generate drafts" request (one model call per customer).
+MAX_DRAFTS_PER_REQUEST = int(os.getenv("MAX_DRAFTS_PER_REQUEST", "50"))
+# Custom personas whose portrait is still being generated, per user (one paid image call each).
+MAX_PENDING_AVATAR_IMAGES = int(os.getenv("MAX_PENDING_AVATAR_IMAGES", "3"))
 
 
 def _cors_origins() -> list[str]:
@@ -83,10 +93,12 @@ app = FastAPI(
     description="Sales automation MVP: customers, campaigns, AI chat, and outbound drafts.",
     version="1.0.0",
 )
+_ORIGINS = _cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins(),
-    allow_credentials=True,
+    allow_origins=_ORIGINS,
+    # Credentials are never combined with a wildcard origin.
+    allow_credentials="*" not in _ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -132,14 +144,33 @@ def _assert_business_owner(session: Session, business_id: int, user_id: int) -> 
     return business
 
 
-def _parse_json_list(raw: Optional[str]) -> list[str]:
-    if not raw:
-        return []
-    try:
-        parsed = json.loads(raw)
-        return [str(x) for x in parsed] if isinstance(parsed, list) else []
-    except Exception:
-        return []
+def _assert_chat_owner(session: Session, chat_id: int, user_id: int) -> ChatSession:
+    chat = get_chat_session(chat_id, session)
+    if not chat:
+        raise HTTPException(404, "Chat not found")
+    if chat.user_id != user_id:
+        raise HTTPException(403, "Forbidden: chat ownership mismatch")
+    if chat.business_id:
+        _assert_business_owner(session, chat.business_id, user_id)
+    return chat
+
+
+def _llm_unavailable(e: Exception) -> HTTPException:
+    # The model provider's error text is logged, not returned to the browser.
+    if isinstance(e, OpenAIConfigError):
+        return HTTPException(status_code=503, detail="LLM unavailable: OPENAI_API_KEY is not set")
+    logger.warning("LLM call failed", exc_info=e)
+    return HTTPException(status_code=503, detail="LLM unavailable: the model call failed (details in the server log)")
+
+
+def _recent_history(session: Session, chat_id: int) -> list[Message]:
+    stmt = (
+        select(Message)
+        .where(Message.chat_id == chat_id, Message.msg_type == "chat")
+        .order_by(Message.created_at.desc(), Message.id.desc())
+        .limit(max(HISTORY_LIMIT, 0))
+    )
+    return list(reversed(session.exec(stmt).all()))
 
 
 def _build_chat_instructions(
@@ -158,13 +189,13 @@ def _profile_snapshot(profile: CustomerProfile) -> dict:
     return {
         "language": profile.language,
         "tone": profile.tone,
-        "interests": _parse_json_list(profile.interests_json),
+        "interests": parse_json_list(profile.interests_json),
         "budget_min": profile.budget_min,
         "budget_max": profile.budget_max,
         "location": profile.location,
         "lead_stage": profile.lead_stage,
         "lead_score": profile.lead_score,
-        "objections": _parse_json_list(profile.objections_json),
+        "objections": parse_json_list(profile.objections_json),
         "notes": profile.notes,
     }
 
@@ -238,7 +269,7 @@ def generate_avatar_image_async(avatar_id: int, image_prompt: str):
         fname = os.path.basename(saved[0])
         _set_avatar_status(avatar_id, "ready", f"/static/avatars/{fname}")
 
-    except Exception as e:
+    except Exception:
         _set_avatar_status(avatar_id, "failed")
         logger.exception("Avatar generation failed")
 
@@ -340,8 +371,11 @@ def create_or_get_business(
     if not user:
         raise HTTPException(404, "User not found")
     business = get_or_create_business_for_user(session, user_id)
-    if payload:
-        business = update_business(session, business.id, payload.model_dump(exclude_none=True))
+    # Only fields the client actually sent are applied. Posting `{}` (what the app does on load)
+    # must return the existing profile, not overwrite it with BusinessCreate's defaults.
+    fields = payload.model_dump(exclude_unset=True, exclude_none=True) if payload else {}
+    if fields:
+        business = update_business(session, business.id, fields)
     return business
 
 
@@ -458,6 +492,11 @@ def create_avatar(
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
+    pending = session.exec(
+        select(Avatar).where(Avatar.owner_id == user_id, Avatar.image_status == "pending")
+    ).all()
+    if len(pending) >= MAX_PENDING_AVATAR_IMAGES:
+        raise HTTPException(429, "Too many portraits are still being generated; try again later")
 
     persona_prompt = build_avatar_prompt(avatar_in)
     image_prompt = build_image_prompt(avatar_in)
@@ -486,10 +525,9 @@ def create_avatar(
 @app.get("/users/{user_id}/avatars/", response_model=list[AvatarRead])
 def list_avatars(user_id: int, session: Session = Depends(get_session)):
     _expire_stale_pending_avatars(session)
-    stmt = select(Avatar).where(
-        or_(Avatar.is_system == True, Avatar.owner_id == user_id),
-        Avatar.image_status != "failed",
-    )
+    # A persona works without a portrait (the UI shows its initial), so a failed or missing image
+    # no longer hides it. Without an API key every portrait fails, including the built-in personas.
+    stmt = select(Avatar).where(or_(Avatar.is_system == True, Avatar.owner_id == user_id))
     return session.exec(stmt).all()
 
 
@@ -507,7 +545,7 @@ def new_chat(user_id: int, avatar_id: int, session: Session = Depends(get_sessio
     try:
         thread_id = create_conversation()
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"LLM unavailable: {e}")
+        raise _llm_unavailable(e)
 
     return create_chat_session(user_id, avatar_id, thread_id, session)
 
@@ -531,7 +569,7 @@ def new_business_chat(
     try:
         thread_id = create_conversation()
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"LLM unavailable: {e}")
+        raise _llm_unavailable(e)
     return create_chat_session(
         user_id=user_id,
         avatar_id=avatar_id,
@@ -551,10 +589,8 @@ def list_chats(user_id: int, session: Session = Depends(get_session)):
 
 # ---------- Messages ----------
 @app.get("/chats/{chat_id}/messages/", response_model=list[MessageRead])
-def list_messages(chat_id: int, session: Session = Depends(get_session)):
-    chat = get_chat_session(chat_id, session)
-    if not chat:
-        raise HTTPException(404, "Chat not found")
+def list_messages(chat_id: int, user_id: int = Query(...), session: Session = Depends(get_session)):
+    _assert_chat_owner(session, chat_id, user_id)
 
     stmt = select(Message).where(Message.chat_id == chat_id).order_by(Message.created_at.asc())
     return session.exec(stmt).all()
@@ -562,10 +598,13 @@ def list_messages(chat_id: int, session: Session = Depends(get_session)):
 
 # ---------- Assistant ----------
 @app.post("/api/assistant/{chat_id}/", response_model=ChatResponse)
-def assistant_send(chat_id: int, req: ChatRequest, session: Session = Depends(get_session)):
-    chat = get_chat_session(chat_id, session)
-    if not chat:
-        raise HTTPException(404, "Chat not found")
+def assistant_send(
+    chat_id: int,
+    req: ChatRequest,
+    user_id: int = Query(...),
+    session: Session = Depends(get_session),
+):
+    chat = _assert_chat_owner(session, chat_id, user_id)
     if chat.avatar_id != req.avatar_id:
         raise HTTPException(400, "Avatar mismatch for this chat")
 
@@ -573,6 +612,7 @@ def assistant_send(chat_id: int, req: ChatRequest, session: Session = Depends(ge
     if not avatar:
         raise HTTPException(404, "Avatar not found")
 
+    history = _recent_history(session, chat.id)
     add_message(session, chat.id, "user", req.message)
     business = session.get(Business, chat.business_id) if chat.business_id else None
     customer = session.get(Customer, chat.customer_id) if chat.customer_id else None
@@ -580,9 +620,9 @@ def assistant_send(chat_id: int, req: ChatRequest, session: Session = Depends(ge
     instructions = _build_chat_instructions(avatar, business, customer, profile)
 
     try:
-        reply_text = chat_sync(chat.thread_id, instructions, req.message)
+        reply_text = chat_sync(instructions, history, req.message)
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"LLM unavailable: {e}")
+        raise _llm_unavailable(e)
 
     add_message(session, chat.id, "assistant", reply_text)
     _update_profile_from_turn(session, chat, req.message, reply_text)
@@ -590,28 +630,6 @@ def assistant_send(chat_id: int, req: ChatRequest, session: Session = Depends(ge
 
 
 # ---------- Campaigns / Outbox ----------
-def _customer_matches_segment(session: Session, customer: Customer, segment: dict) -> bool:
-    if segment.get("marketing_opt_in") is True and not customer.marketing_opt_in:
-        return False
-    profile = ensure_customer_profile(session, customer.id)
-    stages = segment.get("lead_stage_in") or segment.get("lead_stage")
-    if isinstance(stages, list) and stages and profile.lead_stage not in stages:
-        return False
-    interests_any = segment.get("interests_any")
-    if isinstance(interests_any, list) and interests_any:
-        customer_interests = set(_parse_json_list(profile.interests_json))
-        if not customer_interests.intersection({str(x) for x in interests_any}):
-            return False
-    older_days = segment.get("last_seen_older_than_days")
-    if isinstance(older_days, int):
-        if not customer.last_seen_at:
-            return True
-        cutoff = datetime.utcnow() - timedelta(days=older_days)
-        if customer.last_seen_at > cutoff:
-            return False
-    return True
-
-
 @app.post("/business/{business_id}/campaigns", response_model=CampaignRead, status_code=201)
 def create_campaign_route(
     business_id: int,
@@ -660,11 +678,20 @@ def generate_drafts_route(
 
     selected: list[Customer] = []
     for customer in customers:
-        if not _customer_matches_segment(session, customer, segment):
+        if not customer_matches_segment(session, customer, segment):
             continue
         if not customer.marketing_opt_in:
             continue
         selected.append(customer)
+
+    if len(selected) > MAX_DRAFTS_PER_REQUEST:
+        raise HTTPException(
+            413,
+            f"The segment matches {len(selected)} customers; at most {MAX_DRAFTS_PER_REQUEST} drafts per request. "
+            "Narrow the segment or pass customer_ids.",
+        )
+    if selected and not llm_configured():
+        raise HTTPException(status_code=503, detail="LLM unavailable: OPENAI_API_KEY is not set")
 
     content_map: dict[int, str] = {}
     for customer in selected:
@@ -707,6 +734,11 @@ def approve_outbox_route(
     if not campaign:
         raise HTTPException(404, "Campaign not found")
     _assert_business_owner(session, campaign.business_id, user_id)
+    customer = session.get(Customer, msg.customer_id)
+    if payload.approved and (not customer or not customer.marketing_opt_in):
+        raise HTTPException(409, "Customer has not opted in for marketing")
+    if payload.approved and msg.status == "sent":
+        raise HTTPException(409, "Message is already marked as sent")
     if payload.approved and is_rate_limited_approval(session, msg.customer_id):
         raise HTTPException(429, "Rate limit: already approved message for this customer within 24h")
     updated = approve_outbound(session, message_id) if payload.approved else msg
@@ -726,6 +758,8 @@ def mark_outbox_sent_route(
     if not campaign:
         raise HTTPException(404, "Campaign not found")
     _assert_business_owner(session, campaign.business_id, user_id)
+    if msg.status != "approved":
+        raise HTTPException(409, "Only approved messages can be marked as sent")
     updated = mark_sent_outbound(session, message_id)
     if not updated:
         raise HTTPException(404, "Outbox message not found")
@@ -743,16 +777,24 @@ def export_outbox_csv(
         raise HTTPException(404, "Campaign not found")
     _assert_business_owner(session, campaign.business_id, user_id)
     rows = session.exec(
-        select(OutboundMessage).where(
+        select(OutboundMessage, Customer)
+        .join(Customer, Customer.id == OutboundMessage.customer_id)
+        .where(
             OutboundMessage.campaign_id == campaign_id,
             OutboundMessage.status == "approved",
+            Customer.marketing_opt_in == True,  # noqa: E712  (consent withdrawn after approval: not exported)
         )
+        .order_by(OutboundMessage.id)
     ).all()
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["id", "campaign_id", "customer_id", "channel", "content", "status", "approved_at"])
-    for m in rows:
-        writer.writerow([m.id, m.campaign_id, m.customer_id, m.channel, m.content, m.status, m.approved_at or ""])
+    writer.writerow(["id", "campaign_id", "customer_id", "customer_name", "contact", "channel", "content", "status",
+                     "approved_at"])
+    for m, customer in rows:
+        contact = (customer.email if m.channel == "email" else customer.phone) or customer.email or customer.phone or ""
+        # Text comes from a model and from customer data: neutralise anything a spreadsheet would run as a formula.
+        writer.writerow([m.id, m.campaign_id, m.customer_id, csv_safe_cell(customer.name), csv_safe_cell(contact),
+                         m.channel, csv_safe_cell(m.content), m.status, m.approved_at or ""])
     data = io.BytesIO(buf.getvalue().encode("utf-8"))
     return StreamingResponse(
         data,
@@ -770,6 +812,11 @@ async def assistant_ws(ws: WebSocket, chat_id: int):
         if not chat:
             await ws.close(code=4404)
             return
+        try:
+            _assert_chat_owner(session, chat_id, int(ws.query_params.get("user_id", "0")))
+        except (HTTPException, ValueError):
+            await ws.close(code=4403)
+            return
 
         avatar_id = int(ws.query_params.get("avatar_id", chat.avatar_id))
         avatar = session.get(Avatar, avatar_id)
@@ -782,16 +829,17 @@ async def assistant_ws(ws: WebSocket, chat_id: int):
         instructions = _build_chat_instructions(avatar, business, customer, profile)
 
         while True:
-            user_msg = await ws.receive_text()
+            user_msg = (await ws.receive_text())[:MAX_CHAT_MESSAGE_CHARS]
+            history = _recent_history(session, chat.id)
             add_message(session, chat.id, "user", user_msg)
 
             buf = []
             try:
-                for tok in chat_stream(chat.thread_id, instructions, user_msg):
+                for tok in chat_stream(instructions, history, user_msg):
                     buf.append(tok)
                     await ws.send_text(tok)
             except Exception as e:
-                await ws.send_text(f"\n[LLM unavailable: {e}]\n")
+                await ws.send_text(f"\n[{_llm_unavailable(e).detail}]\n")
                 continue
 
             full_reply = "".join(buf)

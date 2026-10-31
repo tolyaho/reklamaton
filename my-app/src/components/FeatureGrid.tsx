@@ -11,7 +11,7 @@ const features = [
   {
     icon: MessageSquare,
     title: "Sales Conversations with CTA",
-    description: "Guided qualification chats that naturally steer toward conversion with contextual calls-to-action.",
+    description: "Qualification chats where the persona is prompted to close with a call to action that fits the channel, and not to pitch customers who haven't opted in.",
   },
   {
     icon: Send,
@@ -21,17 +21,17 @@ const features = [
   {
     icon: FileSpreadsheet,
     title: "CSV Export",
-    description: "Export approved outbound messages and send via any channel — Telegram, WhatsApp, email, or SMS.",
+    description: "Export approved messages as CSV, or copy them, and send them with your own Telegram, WhatsApp, email or SMS tools. The app itself sends nothing.",
   },
   {
     icon: Users,
     title: "Multi-Persona Agents",
-    description: "Create multiple avatars with unique brand voices and personalities for different segments.",
+    description: "Create several personas, each with its own personality and voice. Every chat uses one of them.",
   },
   {
     icon: BarChart3,
-    title: "Analytics-Ready Events",
-    description: "Every interaction is logged as a CustomerEvent — ready for dashboards and data analysis.",
+    title: "Customer Event Log",
+    description: "Profile updates, generated drafts and approvals are stored as CustomerEvent rows, so you can trace how a profile changed.",
   },
 ]
 

@@ -33,9 +33,27 @@ import CustomersPage from "@/pages/CustomersPage"
 import { MessageSquare, Plus, Search, User, Zap } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
+// The small part of Google Identity Services this app uses.
+interface GoogleTokenResponse {
+  access_token: string
+}
+interface GoogleTokenClient {
+  requestAccessToken: () => void
+}
 declare global {
   interface Window {
-    google: any
+    google?: {
+      accounts?: {
+        oauth2?: {
+          initTokenClient: (config: {
+            client_id: string
+            scope: string
+            ux_mode?: string
+            callback: (response: GoogleTokenResponse) => void
+          }) => GoogleTokenClient
+        }
+      }
+    }
   }
 }
 
@@ -120,7 +138,7 @@ export default function App() {
   const [avatarForm, setAvatarForm] = useState({ name: "", personality: "", features: "", age: "", gender: "", hobbies: "" })
   const [avatarCreating, setAvatarCreating] = useState(false)
 
-  const tokenClientRef = useRef<any>(null)
+  const tokenClientRef = useRef<GoogleTokenClient | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messageCountRef = useRef(0)
@@ -148,7 +166,7 @@ export default function App() {
         customer?.email?.toLowerCase().includes(q)
       )
     })
-  }, [chats, chatSearch, avatars, customers])
+  }, [sortedChats, chatSearch, avatars, customers])
 
   const scrollToBottom = useCallback((force = false) => {
     const container = messagesContainerRef.current
@@ -173,12 +191,13 @@ export default function App() {
     script.async = true
     script.defer = true
     script.onload = () => {
-      if (!window.google?.accounts?.oauth2) return
-      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+      const oauth2 = window.google?.accounts?.oauth2
+      if (!oauth2) return
+      tokenClientRef.current = oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: "openid profile email",
         ux_mode: "popup",
-        callback: async (tokenResponse: any) => {
+        callback: async (tokenResponse: GoogleTokenResponse) => {
           try {
             const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
               headers: { Authorization: `Bearer ${tokenResponse.access_token}` },

@@ -56,7 +56,18 @@ function currentUserIdFromStorage(): number {
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init)
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) {
+    // FastAPI errors are {"detail": "..."}; show the message itself, not the raw JSON.
+    const body = await res.text()
+    let message = body
+    try {
+      const detail = JSON.parse(body)?.detail
+      if (typeof detail === "string") message = detail
+    } catch {
+      // not JSON: keep the raw text
+    }
+    throw new Error(message || `HTTP ${res.status}`)
+  }
   return res.json()
 }
 
@@ -116,11 +127,13 @@ export function createChat(userId: number, avatarId: number): Promise<ChatSessio
 // Messages
 
 export function listMessages(chatId: number): Promise<ApiMessage[]> {
-  return request<ApiMessage[]>(`${BASE}/chats/${chatId}/messages/`)
+  const userId = currentUserIdFromStorage()
+  return request<ApiMessage[]>(`${BASE}/chats/${chatId}/messages/?user_id=${userId}`)
 }
 
 export function sendMessage(chatId: number, avatarId: number, message: string): Promise<{ reply: string }> {
-  return request(`${BASE}/api/assistant/${chatId}/`, {
+  const userId = currentUserIdFromStorage()
+  return request(`${BASE}/api/assistant/${chatId}/?user_id=${userId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ avatar_id: avatarId, message }),

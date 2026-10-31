@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 660" width="1200" height="660" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Reklamaton architecture: the full-stack app that runs locally, and the static public showcase</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#686157"/>
+    </marker>
+    <marker id="arrow-coral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c4502e"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="660" rx="20" fill="#f6f2ea"/>
+
+  <!-- Left: full-stack app -->
+  <rect x="24" y="24" width="768" height="612" rx="16" fill="#fffdf9" stroke="#e3dbcd"/>
+  <text x="48" y="58" font-size="17" font-weight="700" fill="#1f1c17">Full-stack app</text>
+  <text x="48" y="80" font-size="13" fill="#686157">Runs locally. Chat, profile extraction and drafts need your OpenAI key.</text>
+
+  <g font-size="13">
+    <rect x="48" y="104" width="196" height="66" rx="10" fill="#faf7f1" stroke="#cbc0ad"/>
+    <text x="64" y="132" font-weight="700" fill="#1f1c17">React app</text>
+    <text x="64" y="152" fill="#686157">my-app/ · Google sign-in</text>
+
+    <rect x="296" y="104" width="236" height="66" rx="10" fill="#1f1c17"/>
+    <text x="312" y="132" font-weight="700" fill="#f6f2ea">FastAPI</text>
+    <text x="312" y="152" fill="#cbc0ad">reklamaton/main.py · REST + WS</text>
+
+    <rect x="584" y="104" width="184" height="66" rx="10" fill="#faf7f1" stroke="#cbc0ad"/>
+    <text x="600" y="132" font-weight="700" fill="#1f1c17">SQLite</text>
+    <text x="600" y="152" fill="#686157">SQLModel tables</text>
+
+    <line x1="244" y1="137" x2="292" y2="137" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="532" y1="137" x2="580" y2="137" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <rect x="296" y="206" width="472" height="92" rx="10" fill="#e6e8f5" stroke="#434e98" stroke-opacity="0.25"/>
+    <text x="312" y="232" font-weight="700" fill="#434e98">OpenAI</text>
+    <text x="312" y="254" fill="#1f1c17">Responses API: chat replies · profile patches (strict JSON schema) · drafts</text>
+    <text x="312" y="276" fill="#686157">Images API: optional persona portraits</text>
+    <line x1="414" y1="170" x2="414" y2="202" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- The loop -->
+  <text x="48" y="342" font-size="12" font-weight="700" letter-spacing="1.4" fill="#686157">WHAT THE CODE DOES</text>
+  <g font-size="13">
+    <rect x="48" y="358" width="200" height="62" rx="10" fill="#fffdf9" stroke="#cbc0ad"/>
+    <text x="62" y="384" font-weight="700" fill="#1f1c17">Chat turn</text>
+    <text x="62" y="404" font-family="ui-monospace, Menlo, monospace" font-size="11.5" fill="#686157">assistant_api.py</text>
+    <rect x="296" y="358" width="200" height="62" rx="10" fill="#fffdf9" stroke="#cbc0ad"/>
+    <text x="310" y="384" font-weight="700" fill="#1f1c17">Profile patch</text>
+    <text x="310" y="404" font-family="ui-monospace, Menlo, monospace" font-size="11.5" fill="#686157">profile_extractor.py</text>
+    <rect x="544" y="358" width="224" height="62" rx="10" fill="#f8e3d8" stroke="#c4502e" stroke-opacity="0.35"/>
+    <text x="558" y="384" font-weight="700" fill="#a03f21">Customer profile</text>
+    <text x="558" y="404" font-family="ui-monospace, Menlo, monospace" font-size="11.5" fill="#a03f21">store.apply_profile_patch</text>
+    <line x1="248" y1="389" x2="292" y2="389" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="496" y1="389" x2="540" y2="389" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <path d="M656 420 L656 444 L148 444 L148 466" fill="none" stroke="#c4502e" stroke-width="1.5" marker-end="url(#arrow-coral)"/>
+    <text x="400" y="438" font-size="11.5" fill="#a03f21" text-anchor="middle">profiles feed the next chat turn and every campaign</text>
+
+    <rect x="48" y="470" width="160" height="62" rx="10" fill="#fffdf9" stroke="#cbc0ad"/>
+    <text x="62" y="496" font-weight="700" fill="#1f1c17">Segment</text>
+    <text x="62" y="516" font-family="ui-monospace, Menlo, monospace" font-size="11.5" fill="#686157">customer_matches_…</text>
+    <rect x="244" y="470" width="160" height="62" rx="10" fill="#fffdf9" stroke="#cbc0ad"/>
+    <text x="258" y="496" font-weight="700" fill="#1f1c17">Draft each</text>
+    <text x="258" y="516" font-family="ui-monospace, Menlo, monospace" font-size="11.5" fill="#686157">ad_gen.py</text>
+    <rect x="440" y="470" width="160" height="62" rx="10" fill="#dfece3" stroke="#366b4e" stroke-opacity="0.35"/>
+    <text x="454" y="496" font-weight="700" fill="#366b4e">Human approval</text>
+    <text x="454" y="516" font-size="11.5" fill="#366b4e">consent · 1 per 24 h</text>
+    <rect x="636" y="470" width="132" height="62" rx="10" fill="#fffdf9" stroke="#cbc0ad"/>
+    <text x="650" y="496" font-weight="700" fill="#1f1c17">CSV export</text>
+    <text x="650" y="516" font-size="11.5" fill="#686157">approved only</text>
+    <line x1="208" y1="501" x2="240" y2="501" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="404" y1="501" x2="436" y2="501" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="600" y1="501" x2="632" y2="501" stroke="#686157" stroke-width="1.5" marker-end="url(#arrow)"/>
+  </g>
+  <text x="48" y="574" font-size="13" fill="#48433b">No sending integration: messages leave as CSV. “Mark as sent” only records it.</text>
+  <text x="48" y="598" font-size="13" fill="#94394a">No authentication: the API trusts the user id it is given, so it is for local use.</text>
+
+  <!-- Right: public showcase -->
+  <rect x="816" y="24" width="360" height="612" rx="16" fill="#1f1c17"/>
+  <text x="840" y="58" font-size="17" font-weight="700" fill="#f6f2ea">Public showcase</text>
+  <text x="840" y="80" font-size="13" fill="#cbc0ad">Static site on Vercel · showcase/</text>
+  <g font-size="13">
+    <rect x="840" y="104" width="312" height="66" rx="10" fill="#2b2721" stroke="#48433b"/>
+    <text x="856" y="132" font-weight="700" fill="#f6f2ea">React 19 + Vite, in the browser</text>
+    <text x="856" y="152" fill="#cbc0ad">state kept in localStorage · reset</text>
+
+    <rect x="840" y="186" width="312" height="66" rx="10" fill="#2b2721" stroke="#48433b"/>
+    <text x="856" y="214" font-weight="700" fill="#f6f2ea">Synthetic workspace</text>
+    <text x="856" y="234" fill="#cbc0ad">fictional studio · 12 invented customers</text>
+
+    <rect x="840" y="268" width="312" height="86" rx="10" fill="#2b2721" stroke="#e0734f" stroke-opacity="0.6"/>
+    <text x="856" y="296" font-weight="700" fill="#f6f2ea">Ported backend rules</text>
+    <text x="856" y="316" fill="#cbc0ad">profile merge · segments · approval</text>
+    <text x="856" y="336" fill="#cbc0ad">limits · CSV columns · prompt builder</text>
+
+    <rect x="840" y="370" width="312" height="86" rx="10" fill="#2b2721" stroke="#48433b"/>
+    <text x="856" y="398" font-weight="700" fill="#f6f2ea">Instead of the model</text>
+    <text x="856" y="418" fill="#cbc0ad">scripted chat and profile patches</text>
+    <text x="856" y="438" fill="#cbc0ad">template composer for drafts</text>
+  </g>
+  <text x="840" y="500" font-size="13" fill="#e0734f" font-weight="700">No backend · no model calls</text>
+  <text x="840" y="522" font-size="13" fill="#cbc0ad">CSP: connect-src 'self'. Nothing is sent.</text>
+  <text x="840" y="574" font-size="12" fill="#a39b8f">Ported from store.py, ad_gen.py, prompter.py</text>
+  <text x="840" y="594" font-size="12" fill="#a39b8f">and the CSV route in main.py.</text>
+</svg>

@@ -25,6 +25,23 @@ def _get_client() -> OpenAI:
     return _client
 
 
+def llm_configured() -> bool:
+    """True when an OpenAI key is configured. Without one, draft generation is refused up front."""
+    return _env("OPENAI_API_KEY") is not None
+
+
+def _has_cyrillic(text: Optional[str]) -> bool:
+    return any("\u0400" <= ch <= "\u04ff" for ch in (text or ""))
+
+
+def draft_language(campaign: Campaign, profile: CustomerProfile) -> str:
+    """Language for a draft: the customer's language once a chat has detected it, otherwise the
+    language the business wrote the offer in (Russian if the offer has Cyrillic letters, else English)."""
+    if profile.language:
+        return profile.language.lower()
+    return "ru" if _has_cyrillic(campaign.offer_text) else "en"
+
+
 def _profile_list(raw: Optional[str]) -> list[str]:
     if not raw:
         return []
@@ -74,7 +91,7 @@ def _build_ad_prompt(
     interests = _profile_list(profile.interests_json)
     objections = _profile_list(profile.objections_json)
     channel = campaign.channel or "web"
-    lang = (profile.language or "ru").lower()
+    lang = draft_language(campaign, profile)
 
     language_instruction = "Write in Russian." if lang.startswith("ru") else f"Write in {'English' if lang.startswith('en') else lang}."
 
@@ -132,8 +149,8 @@ def generate_ad_message(
     channel = campaign.channel or "web"
     limit = _channel_limit(channel)
 
-    client = _get_client()
     try:
+        client = _get_client()
         resp = client.responses.create(
             model=model,
             input=[
@@ -179,7 +196,7 @@ def _fallback_message(
     profile: CustomerProfile,
 ) -> str:
     """Simple template fallback if LLM is unavailable."""
-    lang = (profile.language or "ru").lower()
+    lang = draft_language(campaign, profile)
     name = customer.name or ("клиент" if lang.startswith("ru") else "customer")
     tone = (profile.tone or "friendly").lower()
 

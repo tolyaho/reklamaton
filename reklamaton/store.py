@@ -327,3 +327,44 @@ def is_rate_limited_approval(session: Session, customer_id: int) -> bool:
         )
     ).first()
     return recent is not None
+
+
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def csv_safe_cell(value: Optional[str]) -> str:
+    """Text for a CSV cell that a spreadsheet will not evaluate as a formula (OWASP CSV injection)."""
+    text = "" if value is None else str(value)
+    return "'" + text if text.startswith(_FORMULA_PREFIXES) else text
+
+
+def parse_json_list(raw: Optional[str]) -> list[str]:
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw)
+        return [str(x) for x in parsed] if isinstance(parsed, list) else []
+    except Exception:
+        return []
+
+
+def customer_matches_segment(session: Session, customer: Customer, segment: dict) -> bool:
+    if segment.get("marketing_opt_in") is True and not customer.marketing_opt_in:
+        return False
+    profile = ensure_customer_profile(session, customer.id)
+    stages = segment.get("lead_stage_in") or segment.get("lead_stage")
+    if isinstance(stages, list) and stages and profile.lead_stage not in stages:
+        return False
+    interests_any = segment.get("interests_any")
+    if isinstance(interests_any, list) and interests_any:
+        customer_interests = set(parse_json_list(profile.interests_json))
+        if not customer_interests.intersection({str(x) for x in interests_any}):
+            return False
+    older_days = segment.get("last_seen_older_than_days")
+    if isinstance(older_days, int):
+        if not customer.last_seen_at:
+            return True
+        cutoff = datetime.utcnow() - timedelta(days=older_days)
+        if customer.last_seen_at > cutoff:
+            return False
+    return True

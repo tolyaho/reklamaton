@@ -1,0 +1,4 @@
+# CI lint gate: errors that break or hide bugs (syntax, undefined names, unused imports/variables).
+# The legacy code is not held to a full style ruleset.
+[lint]
+select = ["E9", "F63", "F7", "F82", "F401", "F841"]
