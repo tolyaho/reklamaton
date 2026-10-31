@@ -78,9 +78,6 @@
 }
 
 @layer components {
-  .font-display {
-    font-variation-settings: "SOFT" 50, "WONK" 0;
-  }
   .surface {
     @apply bg-surface border border-line rounded-card;
     box-shadow: var(--shadow-card);

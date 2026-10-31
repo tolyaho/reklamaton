@@ -36,6 +36,8 @@ Several customers show the rules at work:
 | Camille Roux | Last seen 41 days ago: the only match for "last seen more than 30 days ago". |
 | Marta Kowalska, Jonas Weber | Lost and won customers, outside the campaign's stages. |
 
+![The demo's customer table: twelve fictional customers with stage, score, interests, budget, channel and consent](assets/showcase-customers.webp)
+
 Every person in the demo is invented:
 - **Emails** use the reserved `example.com` domain.
 - **Phone numbers** come from the UK Ofcom range 07700 900000–900999, which is set aside for drama.
