@@ -6,9 +6,9 @@ Reklamaton is an AI sales workspace. An AI persona chats with a business's custo
 
 [![CI](https://github.com/tolyaho/reklamaton/actions/workflows/ci.yml/badge.svg)](https://github.com/tolyaho/reklamaton/actions/workflows/ci.yml)
 
-<p align="center"><a href="https://reklamaton-demo.vercel.app/media/reklamaton-walkthrough.mp4"><img src="docs/assets/walkthrough-poster.webp" width="100%" alt="Reklamaton demo: Ines's chat on the left, her customer profile on the right with the stage, interests and budget just updated from her message"></a></p>
+<p align="center"><a href="https://reklamaton-demo.vercel.app/media/reklamaton-walkthrough.mp4"><img src="docs/assets/walkthrough-poster.webp" width="100%" alt="The Reklamaton landing page: a product window replays Ines's chat, with her interests, budget and buying signals marked in her words and her customer memory filling in beside it"></a></p>
 
-<p align="center"><b><a href="https://reklamaton-demo.vercel.app">Open the live demo</a></b> · <a href="https://reklamaton-demo.vercel.app/media/reklamaton-walkthrough.mp4">▶ Watch the 57-second walkthrough</a> · <a href="docs/demo.md">What the demo is</a> · <a href="docs/architecture.md">Architecture</a></p>
+<p align="center"><b><a href="https://reklamaton-demo.vercel.app">Open the live demo</a></b> · <a href="https://reklamaton-demo.vercel.app/media/reklamaton-walkthrough.mp4">▶ Watch the 52-second walkthrough</a> · <a href="docs/demo.md">What the demo is</a> · <a href="docs/architecture.md">Architecture</a></p>
 
 The live demo is a static site with a fictional studio and synthetic customers. You don't need to sign up or bring an API key. It makes no model calls and sends nothing. The FastAPI backend that does the real work is in this repository and runs locally.
 
@@ -28,7 +28,7 @@ The live demo is a static site with a fictional studio and synthetic customers. 
 
 ## Chat in, structured profile out
 
-![The demo's conversation view: Ines's messages with the phrases that changed her profile underlined, and her profile with the updated fields marked](docs/assets/showcase-conversation.webp)
+![The demo's conversation view: Ines's messages with each fact marked in its colour, and her customer memory with the updated fields glowing and the budget traced back to her words](docs/assets/showcase-conversation.webp)
 
 What makes this more than a chatbot is that the conversation becomes data. The model returns typed fields, not a summary. The merge is conservative:
 - "not mentioned" never erases what is already known;
@@ -36,13 +36,13 @@ What makes this more than a chatbot is that the conversation becomes data. The m
 - the score moves by a delta and stays within 0–100;
 - every update is logged as a customer event.
 
-The next chat turn sees the updated profile, and so does every campaign. In the demo, each changed field links back to the exact words it came from.
+The next chat turn sees the updated profile, and so does every campaign. In the demo, every fact keeps one colour from her words to the profile field to the draft sentence (interest, budget, concern, intent), and each field links back to the exact words it came from.
 
 ## Campaigns a person signs off
 
-![The demo's campaign view: the segment builder with six recipients, and Ines's approved draft with the profile fields that shaped it](docs/assets/showcase-campaign.webp)
+![The demo's campaign view: Audience, Drafts, Approval and Export steps, the audience funnel narrowing to six customers, and Ines's approved draft with its personalised sentences marked](docs/assets/showcase-campaign.webp)
 
-Each draft shows which profile fields shaped it. For example, Ines's draft:
+Each draft marks the sentences its profile fields produced. For example, Ines's draft:
 - refers to her pastry boxes;
 - says the €3,900 packaging system fits her €4,000 budget;
 - answers her timeline objection;
@@ -54,11 +54,11 @@ Theo's draft cannot be approved, because he already received an approved message
 
 [`showcase/`](showcase/) is a standalone React 19 + Vite app built for this portfolio. It runs the whole loop in your browser:
 1. Play Ines's four-turn conversation and watch her profile fill in.
-2. See her join the January campaign's segment.
-3. Generate drafts, approve one and run into the 24-hour rule.
+2. See her join the January campaign's audience.
+3. Write drafts, approve one and run into the 24-hour rule.
 4. Preview and download the CSV.
 
-There is also a guided tour, and a reset button that restores the starting state.
+The landing page opens on the product itself: a window that replays the scripted conversation, then three acts (conversation, memory, campaign) that you can play, inspect, approve and export from on your own copy of the workspace. There is also a guided tour, and a reset button that restores the starting state.
 
 What is real and what is staged:
 - **Ported from the Python backend:** the profile merge, segment matching, consent and approval rules, channel limits and CSV columns.
@@ -67,7 +67,7 @@ What is real and what is staged:
 
 Every scripted or composed piece is labelled as such in the UI. [docs/demo.md](docs/demo.md) maps each screen to the backend code.
 
-<p align="center"><img src="docs/assets/showcase-mobile.webp" width="88%" alt="The demo on a phone: landing page, Ines's updated profile, and a personalized draft"></p>
+<p align="center"><img src="docs/assets/showcase-mobile.webp" width="88%" alt="The demo on a phone: the landing replay with Ines's facts marked, her updated customer memory, and her personalised draft"></p>
 
 ## Architecture
 
@@ -121,8 +121,8 @@ The `Dockerfile` starts both dev servers in one container. It is a local conveni
 | | Command | Result |
 | --- | --- | --- |
 | Backend | `cd reklamaton && pytest` | 32 passed, 2 expected failures. The expected failures record the missing authentication (see below). |
-| Showcase unit | `cd showcase && npm test` | 18 passed |
-| Showcase browser | `cd showcase && npm run test:e2e` | 20 passed (Playwright, production build, production CSP) |
+| Showcase unit | `cd showcase && npm test` | 24 passed |
+| Showcase browser | `cd showcase && npm run test:e2e` | 24 passed (Playwright, production build, production CSP) |
 
 - **No live model calls in tests or CI.** Model calls go to in-process fakes, so the tests check the requests the code builds and how it handles replies. They do not measure model quality.
 - **Browser test failure conditions.** The browser tests fail on any console error, any request to another host, or horizontal overflow at 390 to 1920 px.
