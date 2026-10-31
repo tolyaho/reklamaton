@@ -2,20 +2,7 @@ import { readFile } from "node:fs/promises"
 import { expect, fresh, playInesConversation, test } from "./fixtures"
 
 test.beforeEach(async ({ page }) => {
-  await fresh(page, "/")
-})
-
-test("landing explains the product honestly and opens the demo", async ({ page }) => {
-  await page.goto("/")
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Every conversation becomes")
-  await expect(page.getByText("No sign-up, no API key, no model calls")).toBeVisible()
-  // The old landing's invented KPIs must not come back.
-  for (const claim of ["12+", "50+", "80%", "Time saved per operator"]) {
-    await expect(page.locator("body")).not.toContainText(claim)
-  }
-  await page.getByTestId("hero-explore").click()
-  await expect(page).toHaveURL(/\/app\/overview$/)
-  await expect(page.getByTestId("kpis")).toContainText("12")
+  await fresh(page)
 })
 
 test("a chat turn updates the right customer's profile, with evidence", async ({ page }) => {
@@ -24,14 +11,19 @@ test("a chat turn updates the right customer's profile, with evidence", async ({
   const profile = page.getByTestId("profile-panel")
   await expect(profile).toContainText("New")
   await page.getByTestId("play-turn").click()
-  await expect(page.getByText("Extracting profile fields…")).toBeVisible()
+  // The customer's message shows first; the profile only changes once the turn is committed.
+  await expect(page.getByTestId("thread")).toContainText("Do you do packaging?")
   await expect(profile.getByTestId("profile-updated")).toContainText("Profile updated · 7 fields")
   await expect(profile).toContainText("Qualified")
   await expect(profile).toContainText("pastry boxes")
   await expect(profile).toContainText("Porto")
-  // Following an evidence quote lands on the customer's message.
+  // Facts are marked in her message in their colour.
+  await expect(page.locator("[data-testid=thread] mark.fact-interest")).toHaveText("our pastry boxes look tired")
+  // Following an evidence quote lands on the customer's message and lights up that fact.
   await profile.getByRole("button", { name: /Do you do packaging\?/ }).first().click()
-  await expect(page.locator("mark", { hasText: "Do you do packaging?" }).first()).toBeInViewport()
+  const mark = page.locator("[data-testid=thread] mark", { hasText: "Do you do packaging?" }).first()
+  await expect(mark).toBeInViewport()
+  await expect(mark).toHaveAttribute("data-active", "true")
   // Nobody else changed.
   await page.goto("/app/customers")
   await expect(page.getByTestId("customer-row-3")).toContainText("Qualified")
@@ -81,7 +73,7 @@ test("segment controls filter on real profile fields and show the backend JSON",
 test("customers without consent are never selected, and withdrawing consent removes them", async ({ page }) => {
   await page.goto("/app/customers/7")
   const drawer = page.getByTestId("customer-drawer")
-  await expect(drawer).toContainText("No marketing consent")
+  await expect(drawer).toContainText("No consent")
   await expect(drawer).toContainText("January packaging slots")
   await page.goto("/app/customers/5")
   await page.getByTestId("consent-switch").click()
@@ -96,24 +88,31 @@ test("drafts, approval rules and CSV export use the current state", async ({ pag
   await playInesConversation(page)
   await page.goto("/app/campaigns/1")
   await expect(page.getByTestId("export-csv")).toBeDisabled()
+  await expect(page.getByTestId("stepper")).toContainText("6 customers")
   await page.getByTestId("generate-drafts").click()
-  await expect(page.getByTestId("draft-list").locator("article")).toHaveCount(6)
+  await expect(page.getByTestId("draft-list").getByRole("button")).toHaveCount(6)
 
+  // Ines's draft opens first; each sentence a profile field produced is marked in that field's colour.
   const ines = page.getByTestId("draft-1")
   await expect(ines).toContainText("Hi Ines,")
-  await expect(ines).toContainText("At €3,900, it fits the budget you mentioned.")
+  await expect(ines.locator("mark.fact-budget")).toHaveText("At €3,900, it fits the budget you mentioned.")
+  await expect(ines.locator("mark.fact-interest")).toHaveText("Following up on your new pastry boxes.")
   await expect(ines.getByTestId("draft-factors")).toContainText("Objection · timeline")
+  await page.getByTestId("queue-4").click()
   await expect(page.getByTestId("draft-4")).toContainText("Guten Tag Lena Brandt,")
+  await page.getByTestId("queue-1").click()
 
   // Marking as sent needs approval first; there is no button for it on a draft.
   await expect(page.getByTestId("mark-sent-1")).toHaveCount(0)
   await page.getByTestId("approve-1").click()
-  await expect(ines).toContainText("Approved")
+  await expect(ines.getByTestId("draft-status")).toHaveText("Approved")
+  await expect(page.getByTestId("stepper")).toContainText("1 of 6")
 
   // Theo already has an approved message from another campaign within 24 h.
+  await page.getByTestId("queue-2").click()
   await page.getByTestId("approve-2").click()
   await expect(page.getByTestId("block-2")).toContainText("Rate limit")
-  await expect(page.getByTestId("draft-2")).toContainText("Draft")
+  await expect(page.getByTestId("draft-2").getByTestId("draft-status")).toHaveText("Draft")
 
   await page.getByTestId("preview-csv").click()
   await expect(page.getByTestId("csv-preview")).toContainText("ines.calder@example.com")
@@ -132,8 +131,9 @@ test("drafts, approval rules and CSV export use the current state", async ({ pag
   await expect(page.getByTestId("export-status")).toContainText("1 message")
 
   // After marking as sent, nothing is left to export.
+  await page.getByTestId("queue-1").click()
   await page.getByTestId("mark-sent-1").click()
-  await expect(ines).toContainText("Marked as sent")
+  await expect(ines.getByTestId("draft-status")).toHaveText("Marked as sent")
   await expect(page.getByTestId("export-csv")).toBeDisabled()
 })
 

@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises"
 import { expect, fresh, noHorizontalOverflow, test } from "./fixtures"
 
 test.beforeEach(async ({ page }) => {
-  await fresh(page, "/")
+  await fresh(page)
 })
 
 test("the guided tour walks the whole loop on the real demo state", async ({ page }) => {
