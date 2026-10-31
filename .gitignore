@@ -19,3 +19,4 @@ static/
 *.sqlite3
 .env.*
 !.env.example
+.vercel
