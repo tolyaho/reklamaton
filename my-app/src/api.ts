@@ -56,7 +56,18 @@ function currentUserIdFromStorage(): number {
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init)
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) {
+    // FastAPI errors are {"detail": "..."}; show the message itself, not the raw JSON.
+    const body = await res.text()
+    let message = body
+    try {
+      const detail = JSON.parse(body)?.detail
+      if (typeof detail === "string") message = detail
+    } catch {
+      // not JSON: keep the raw text
+    }
+    throw new Error(message || `HTTP ${res.status}`)
+  }
   return res.json()
 }
 

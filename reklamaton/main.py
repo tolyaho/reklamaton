@@ -53,11 +53,13 @@ from store import (
     approve_outbound,
     mark_sent_outbound,
     is_rate_limited_approval,
+    parse_json_list,
+    customer_matches_segment,
 )
 from llm import create_conversation, chat_sync, chat_stream
 from prompter import build_avatar_prompt, build_image_prompt, build_sales_prompt
 from profile_extractor import extract_profile_patch
-from ad_gen import generate_ad_message
+from ad_gen import generate_ad_message, llm_configured
 
 from image_gen import OpenAIImageAPI
 
@@ -132,16 +134,6 @@ def _assert_business_owner(session: Session, business_id: int, user_id: int) -> 
     return business
 
 
-def _parse_json_list(raw: Optional[str]) -> list[str]:
-    if not raw:
-        return []
-    try:
-        parsed = json.loads(raw)
-        return [str(x) for x in parsed] if isinstance(parsed, list) else []
-    except Exception:
-        return []
-
-
 def _build_chat_instructions(
     avatar: Avatar,
     business: Optional[Business],
@@ -158,13 +150,13 @@ def _profile_snapshot(profile: CustomerProfile) -> dict:
     return {
         "language": profile.language,
         "tone": profile.tone,
-        "interests": _parse_json_list(profile.interests_json),
+        "interests": parse_json_list(profile.interests_json),
         "budget_min": profile.budget_min,
         "budget_max": profile.budget_max,
         "location": profile.location,
         "lead_stage": profile.lead_stage,
         "lead_score": profile.lead_score,
-        "objections": _parse_json_list(profile.objections_json),
+        "objections": parse_json_list(profile.objections_json),
         "notes": profile.notes,
     }
 
@@ -340,8 +332,11 @@ def create_or_get_business(
     if not user:
         raise HTTPException(404, "User not found")
     business = get_or_create_business_for_user(session, user_id)
-    if payload:
-        business = update_business(session, business.id, payload.model_dump(exclude_none=True))
+    # Only fields the client actually sent are applied. Posting `{}` (what the app does on load)
+    # must return the existing profile, not overwrite it with BusinessCreate's defaults.
+    fields = payload.model_dump(exclude_unset=True, exclude_none=True) if payload else {}
+    if fields:
+        business = update_business(session, business.id, fields)
     return business
 
 
@@ -486,10 +481,9 @@ def create_avatar(
 @app.get("/users/{user_id}/avatars/", response_model=list[AvatarRead])
 def list_avatars(user_id: int, session: Session = Depends(get_session)):
     _expire_stale_pending_avatars(session)
-    stmt = select(Avatar).where(
-        or_(Avatar.is_system == True, Avatar.owner_id == user_id),
-        Avatar.image_status != "failed",
-    )
+    # A persona works without a portrait (the UI shows its initial), so a failed or missing image
+    # no longer hides it. Without an API key every portrait fails, including the built-in personas.
+    stmt = select(Avatar).where(or_(Avatar.is_system == True, Avatar.owner_id == user_id))
     return session.exec(stmt).all()
 
 
@@ -590,28 +584,6 @@ def assistant_send(chat_id: int, req: ChatRequest, session: Session = Depends(ge
 
 
 # ---------- Campaigns / Outbox ----------
-def _customer_matches_segment(session: Session, customer: Customer, segment: dict) -> bool:
-    if segment.get("marketing_opt_in") is True and not customer.marketing_opt_in:
-        return False
-    profile = ensure_customer_profile(session, customer.id)
-    stages = segment.get("lead_stage_in") or segment.get("lead_stage")
-    if isinstance(stages, list) and stages and profile.lead_stage not in stages:
-        return False
-    interests_any = segment.get("interests_any")
-    if isinstance(interests_any, list) and interests_any:
-        customer_interests = set(_parse_json_list(profile.interests_json))
-        if not customer_interests.intersection({str(x) for x in interests_any}):
-            return False
-    older_days = segment.get("last_seen_older_than_days")
-    if isinstance(older_days, int):
-        if not customer.last_seen_at:
-            return True
-        cutoff = datetime.utcnow() - timedelta(days=older_days)
-        if customer.last_seen_at > cutoff:
-            return False
-    return True
-
-
 @app.post("/business/{business_id}/campaigns", response_model=CampaignRead, status_code=201)
 def create_campaign_route(
     business_id: int,
@@ -660,11 +632,14 @@ def generate_drafts_route(
 
     selected: list[Customer] = []
     for customer in customers:
-        if not _customer_matches_segment(session, customer, segment):
+        if not customer_matches_segment(session, customer, segment):
             continue
         if not customer.marketing_opt_in:
             continue
         selected.append(customer)
+
+    if selected and not llm_configured():
+        raise HTTPException(status_code=503, detail="LLM unavailable: OPENAI_API_KEY is not set")
 
     content_map: dict[int, str] = {}
     for customer in selected:

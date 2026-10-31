@@ -30,7 +30,7 @@ const steps = [
     icon: Rocket,
     step: "3",
     title: "Generate & Export Outreach",
-    description: "Create personalized campaign drafts, approve messages, and export to any channel.",
+    description: "Create personalized campaign drafts, approve them, and export the approved messages as CSV.",
   },
 ]
 
@@ -48,12 +48,12 @@ export default function HomePage({ isAuthed, onPrimaryCta, onLogin }: Props) {
       <Section>
         <SectionReveal>
           <div className="mb-4 text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Demo metrics</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Built-in guardrails</p>
           </div>
           <StaggerInView className="grid gap-4 sm:grid-cols-3" stagger={0.08}>
-            <StaggerItem><Stat value="12+" label="Profiles enriched per chat" note="demo" /></StaggerItem>
-            <StaggerItem><Stat value="50+" label="Draft messages generated" note="demo" /></StaggerItem>
-            <StaggerItem><Stat value="80%" label="Time saved per operator" note="demo" /></StaggerItem>
+            <StaggerItem><Stat value="Opt-in only" label="Drafts are written only for customers who agreed to marketing" /></StaggerItem>
+            <StaggerItem><Stat value="1 per 24 h" label="Approved messages per customer, across all campaigns" /></StaggerItem>
+            <StaggerItem><Stat value="160 / 400 / 500" label="Character limits for SMS / Telegram and WhatsApp / email and web" /></StaggerItem>
           </StaggerInView>
         </SectionReveal>
       </Section>
@@ -63,7 +63,7 @@ export default function HomePage({ isAuthed, onPrimaryCta, onLogin }: Props) {
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Everything you need to close more deals</h2>
             <p className="mt-3 text-lg text-muted-foreground">
-              From first contact to outreach — automated, personal, compliant.
+              From first chat to an approved campaign message. A person approves every message before it leaves.
             </p>
           </div>
         </SectionReveal>
@@ -95,10 +95,10 @@ export default function HomePage({ isAuthed, onPrimaryCta, onLogin }: Props) {
       <Section>
         <SectionReveal>
           <Card className="flex flex-col items-center gap-4 bg-primary/5 px-6 py-12 text-center">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Start with a demo business in 60 seconds</h2>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Try it on your own business profile</h2>
             <p className="max-w-lg text-muted-foreground">
-              No credit card required. Sign in with Google and explore the full MVP — create avatars, chat, build profiles,
-              and launch campaigns.
+              Sign in with Google, describe your business, add customers and set up a campaign. Chat, profile extraction and
+              draft generation need an OpenAI API key on the server.
             </p>
             <Button size="lg" onClick={isAuthed ? onPrimaryCta : onLogin}>
               Get started

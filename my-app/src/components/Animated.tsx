@@ -175,4 +175,3 @@ export function MessageBubble({ children, className, isNew }: WrapperProps & { i
   )
 }
 
-export { motion }

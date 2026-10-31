@@ -92,7 +92,7 @@ class OpenAIImageAPI:
         return rid
 
     def check_generation(self, request_id: str, attempts: int = 10, delay: int = 5):
-        # OpenAI returns the image payload immediately (base64) for gpt-image-* models. :contentReference[oaicite:1]{index=1}
+        # OpenAI returns the image payload immediately (base64) for gpt-image-* models.
         return self._jobs.get(request_id)
 
     def save_images(self, files, out_path_prefix: str):
@@ -106,7 +106,7 @@ class OpenAIImageAPI:
 
     @staticmethod
     def _pick_size(w: int, h: int) -> Optional[str]:
-        # Supported GPT image sizes include 1024x1024, 1024x1536, 1536x1024, auto. :contentReference[oaicite:2]{index=2}
+        # Supported GPT image sizes include 1024x1024, 1024x1536, 1536x1024, auto.
         if (w, h) == (1024, 1024):
             return "1024x1024"
         if (w, h) == (1024, 1536):

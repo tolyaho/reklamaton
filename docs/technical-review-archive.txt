@@ -1,3 +1,7 @@
+ARCHIVED. This review describes the July 2025 prototype as it stood on 2026-03-03, before the
+March-May 2026 rebuild (FusionBrain images, no CRM or campaigns). It is kept for history only.
+See README.md for the current design.
+
 REKLAMATON PROJECT - FULL TECHNICAL REVIEW
 Generated: 2026-03-03
 

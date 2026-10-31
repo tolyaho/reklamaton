@@ -1,7 +1,7 @@
 fastapi==0.110.0
 uvicorn[standard]==0.29.0
 pydantic==2.6.3
-openai>=1.15.0
+openai>=1.66.0,<4  # Responses API (used for drafts and profile extraction) needs >=1.66
 python-dotenv==1.0.1
 sqlmodel==0.0.24
 sqlalchemy>=2.0

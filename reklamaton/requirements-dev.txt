@@ -1,0 +1,3 @@
+-r requirements.txt
+pytest>=8
+httpx>=0.27,<0.28  # FastAPI's TestClient; the pinned Starlette does not support httpx 0.28
