@@ -20,8 +20,8 @@ function NotFound() {
     <main className="grid min-h-dvh place-items-center px-6 text-center">
       <div>
         <Wordmark />
-        <h1 className="mt-8 font-display text-[34px] font-semibold text-ink">This page isn't part of the demo</h1>
-        <p className="mt-2 text-ink-3">The workspace lives under /app.</p>
+        <h1 className="display mt-8 text-[40px] leading-tight text-ink">This page isn't part of the demo</h1>
+        <p className="mt-3 text-body text-ink-3">The workspace lives under /app.</p>
         <div className="mt-6 flex justify-center gap-2">
           <Link to="/app/overview" className={buttonClass("primary")}>
             <Compass aria-hidden /> Open the workspace

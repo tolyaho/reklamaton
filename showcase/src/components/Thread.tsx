@@ -46,7 +46,7 @@ export function Thread({
   const pending = playback?.chatId === chat.id ? playback : null
 
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className={cx("flex flex-col", size === "lg" ? "gap-5" : "gap-4")}>
       {messages.map((m, i) => {
         const prev = messages[i - 1]
         const showDay = days && (!prev || shortDate(prev.created_at) !== shortDate(m.created_at))
@@ -54,7 +54,7 @@ export function Thread({
           <Fragment key={m.id}>
             {showDay && (
               <li className="my-1 flex justify-center" aria-hidden>
-                <span className="text-[11px] font-medium text-ink-3">
+                <span className="text-micro font-medium text-ink-3">
                   {shortDate(m.created_at) === shortDate(state.now) ? "Today" : shortDate(m.created_at)}
                 </span>
               </li>
@@ -79,7 +79,7 @@ export function Thread({
             className="flex flex-col items-start"
           >
             <div className={cx(bubbleClass("user", size))}>{pending.customer}</div>
-            <span className="mt-1 px-1 text-[11px] text-ink-3">just now</span>
+            <span className="mt-1.5 px-1 text-micro text-ink-3">just now</span>
           </motion.li>
           <AnimatePresence>
             {pending.phase === "reply" && (
@@ -105,8 +105,8 @@ export function Thread({
 
 function bubbleClass(role: Message["role"], size: "md" | "lg") {
   return cx(
-    "max-w-[88%] rounded-[18px] px-3.5 py-2.5 leading-relaxed whitespace-pre-wrap @lg:max-w-[80%]",
-    size === "lg" ? "text-[15px]" : "text-[14px]",
+    "max-w-[88%] rounded-[20px] whitespace-pre-wrap @lg:max-w-[78%]",
+    size === "lg" ? "px-4.5 py-3 text-body leading-[1.65]" : "px-4 py-2.5 text-ui leading-relaxed",
     role === "assistant"
       ? "on-ink rounded-br-md bg-ink text-paper"
       : "rounded-bl-md border border-line bg-surface text-ink shadow-[0_1px_0_rgb(31_28_23/0.03)]",
@@ -115,8 +115,8 @@ function bubbleClass(role: Message["role"], size: "md" | "lg") {
 
 function PersonaLabel({ name }: { name: string }) {
   return (
-    <span className="mb-1 inline-flex items-center gap-1.5 pr-1 text-[11.5px] font-medium text-ink-3">
-      <Sparkles className="size-3 text-coral" aria-hidden /> {name}
+    <span className="mb-1.5 inline-flex items-center gap-1.5 pr-1 text-meta font-medium text-ink-2">
+      <Sparkles className="size-3.5 text-coral" aria-hidden /> {name}
     </span>
   )
 }
@@ -150,7 +150,7 @@ function Bubble({
           <FactText text={message.content} facts={facts} reveal={revealed} active={flash?.field ?? null} />
         )}
       </div>
-      <span className="mt-1 px-1 text-[11px] text-ink-3">
+      <span className="mt-1.5 px-1 text-micro text-ink-3">
         <span className="sr-only">{mine ? `${persona}, ` : "Customer, "}</span>
         {clockTime(message.created_at)}
       </span>

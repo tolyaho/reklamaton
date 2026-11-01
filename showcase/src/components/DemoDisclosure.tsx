@@ -13,7 +13,7 @@ export function DemoDisclosure({ className, testId = "demo-disclosure", tone = "
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         className={cx(
-          "group inline-flex max-w-full items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-left text-[12px] transition-colors",
+          "group inline-flex max-w-full items-baseline gap-2 rounded-[14px] border py-1.5 pr-3.5 pl-3 text-left text-meta transition-colors sm:rounded-full",
           tone === "light"
             ? "border-line bg-surface/80 text-ink-2 hover:border-line-strong hover:text-ink"
             : "border-paper/20 bg-paper/5 text-paper/80 hover:text-paper",
@@ -21,8 +21,8 @@ export function DemoDisclosure({ className, testId = "demo-disclosure", tone = "
         )}
         data-testid={testId}
       >
-        <span className="size-1.5 shrink-0 rounded-full bg-coral" aria-hidden />
-        <span className="flex flex-wrap gap-x-1.5">
+        <span className="size-1.5 shrink-0 translate-y-[-1px] rounded-full bg-coral" aria-hidden />
+        <span className="flex flex-wrap gap-x-1.5 gap-y-0.5">
           <span className="whitespace-nowrap">Interactive demo</span>
           <span className="opacity-40" aria-hidden>
             ·
@@ -32,14 +32,14 @@ export function DemoDisclosure({ className, testId = "demo-disclosure", tone = "
             ·
           </span>
           <span className="whitespace-nowrap">No live AI calls</span>
-        </span>
-        <span
-          className={cx(
-            "shrink-0 font-medium whitespace-nowrap underline underline-offset-2",
-            tone === "light" ? "text-coral-ink decoration-coral/30 group-hover:decoration-coral" : "text-paper decoration-paper/40",
-          )}
-        >
-          About this demo
+          <span
+            className={cx(
+              "ml-1 font-medium whitespace-nowrap underline underline-offset-2",
+              tone === "light" ? "text-coral-ink decoration-coral/30 group-hover:decoration-coral" : "text-paper decoration-paper/40",
+            )}
+          >
+            About this demo
+          </span>
         </span>
       </button>
       <Modal open={open} onOpenChange={setOpen} title="About this demo" testId="about-demo" width="max-w-xl">

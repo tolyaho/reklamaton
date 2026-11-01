@@ -14,12 +14,12 @@ export function PromptView({ text, emphasize = [] }: { text: string; emphasize?:
         return (
           <section
             key={`${s.title}-${i}`}
-            className={cx("rounded-ctl border p-3", strong ? "border-coral/30 bg-coral-soft/40" : "border-line bg-surface-2")}
+            className={cx("rounded-ctl border p-3.5", strong ? "border-coral/30 bg-coral-soft/40" : "border-line bg-surface-2")}
           >
-            <h3 className={cx("font-mono text-[11px] font-semibold tracking-[0.08em]", strong ? "text-coral-ink" : "text-ink-3")}>
+            <h3 className={cx("font-mono text-micro font-semibold tracking-[0.04em]", strong ? "text-coral-ink" : "text-ink-3")}>
               ## {s.title}
             </h3>
-            <pre className="mt-1.5 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap break-words text-ink-2">
+            <pre className="mt-2 font-mono text-meta leading-relaxed whitespace-pre-wrap break-words text-ink-2">
               {s.lines.join("\n").trim()}
             </pre>
           </section>

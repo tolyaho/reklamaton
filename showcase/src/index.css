@@ -13,7 +13,7 @@
   --color-surface-2: #faf7f1;
   --color-ink: #1f1c17;
   --color-ink-2: #48433b;
-  --color-ink-3: #686157;
+  --color-ink-3: #635c52;
   --color-line: #e3dbcd;
   --color-line-strong: #cbc0ad;
 
@@ -28,6 +28,27 @@
   --color-amber-soft: #f5e9d1;
   --color-rose: #94394a;
   --color-rose-soft: #f4e0e3;
+
+  /* Type scale. Reading text is 16px; product content 15px; labels 14px; metadata 13px; 12px only
+     for timestamps and counters. */
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1rem;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.25rem;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.25rem;
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.5rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.625rem;
+  --text-heading: 1.0625rem;
+  --text-heading--line-height: 1.5rem;
+  --text-lead: 1.1875rem;
+  --text-lead--line-height: 1.85rem;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.95rem;
+  --text-page: 1.875rem;
+  --text-page--line-height: 2.25rem;
 
   --radius-ctl: 0.625rem;
   --radius-card: 1rem;
@@ -93,8 +114,26 @@
     background: linear-gradient(180deg, #fffefb 0%, #f9f5ee 100%);
     box-shadow: var(--shadow-inset), var(--shadow-card);
   }
+  /* Shared type styles for the product. Inter everywhere inside the app; Fraunces (.display) is kept
+     for the landing page's headlines. */
+  .type-page {
+    @apply text-page font-semibold tracking-[-0.022em] text-ink;
+  }
+  .type-title {
+    @apply text-title font-semibold tracking-[-0.018em];
+  }
+  .type-card {
+    @apply text-heading font-semibold tracking-[-0.01em] text-ink;
+  }
+  /* A field or group label: sentence case, never tracked capitals. */
+  .type-label {
+    @apply text-meta font-medium text-ink-2;
+  }
+  .type-meta {
+    @apply text-meta text-ink-3;
+  }
   .eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3;
+    @apply text-meta font-medium text-ink-3;
   }
   .num {
     font-variant-numeric: tabular-nums;
@@ -146,17 +185,15 @@
     box-shadow: var(--shadow-window);
   }
 
+  /* Fraunces for headlines. A moderate optical size and open spacing keep the words apart at
+     display sizes; the weight sits between regular and semibold. */
   .display {
     font-family: var(--font-display);
-    font-variation-settings: "opsz" 96;
+    font-variation-settings: "opsz" 72;
     font-variant-numeric: lining-nums;
-    letter-spacing: -0.032em;
-  }
-  /* Display face at reading sizes: the font's own optical size, gentler tracking. */
-  .display-sm {
-    font-family: var(--font-display);
-    font-variant-numeric: lining-nums;
-    letter-spacing: -0.012em;
+    font-weight: 520;
+    letter-spacing: -0.02em;
+    word-spacing: 0.04em;
   }
 }
 

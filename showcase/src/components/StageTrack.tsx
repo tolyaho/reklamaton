@@ -9,7 +9,7 @@ export function StageTrack({ stage, compact = false, className }: { stage: LeadS
   const lost = stage === "lost"
   const at = lost ? -1 : TRACK.indexOf(stage)
   return (
-    <div className={cx("flex flex-col gap-1.5", className)} role="img" aria-label={`Lead stage: ${STAGE_META[stage].label}`}>
+    <div className={cx("flex flex-col gap-2", className)} role="img" aria-label={`Lead stage: ${STAGE_META[stage].label}`}>
       <div className="flex gap-1">
         {TRACK.map((s, i) => (
           <span
@@ -25,7 +25,7 @@ export function StageTrack({ stage, compact = false, className }: { stage: LeadS
         ))}
       </div>
       {!compact && (
-        <div className="flex text-[11px] font-medium" aria-hidden>
+        <div className="flex text-micro font-medium" aria-hidden>
           {lost ? (
             <span className="text-rose">Lost</span>
           ) : (

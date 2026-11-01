@@ -52,7 +52,7 @@ export function FactDot({ kind, className }: { kind: FactKind; className?: strin
 /** The four kinds of fact, as a compact key. */
 export function FactLegend({ className, kinds = FACT_KINDS }: { className?: string; kinds?: FactKind[] }) {
   return (
-    <ul className={cx("flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-ink-2", className)} aria-label="Colour key">
+    <ul className={cx("flex flex-wrap items-center gap-x-5 gap-y-2 text-label text-ink-2", className)} aria-label="Colour key">
       {kinds.map((k) => (
         <li key={k} className="inline-flex items-center gap-2">
           <span aria-hidden className={cx("h-2.5 w-5 rounded-sm", FACT_TONE[k].swatch)} />
@@ -65,7 +65,7 @@ export function FactLegend({ className, kinds = FACT_KINDS }: { className?: stri
 
 export function FactChip({ kind, children, className }: { kind: FactKind; children: ReactNode; className?: string }) {
   return (
-    <span className={cx("inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[12.5px] font-medium leading-5", FACT_TONE[kind].chip, className)}>
+    <span className={cx("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-meta font-medium leading-5", FACT_TONE[kind].chip, className)}>
       {children}
     </span>
   )

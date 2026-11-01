@@ -46,7 +46,7 @@ function NavItems({ onNavigate, layoutKey }: { onNavigate?: () => void; layoutKe
               onClick={onNavigate}
               className={({ isActive }) =>
                 cx(
-                  "group relative flex h-10 items-center gap-3 rounded-[11px] px-3 text-[14px] font-medium transition-colors duration-150",
+                  "group relative flex h-11 items-center gap-3 rounded-[11px] px-3 text-ui font-medium transition-colors duration-150",
                   isActive ? "text-ink" : "text-ink-2 hover:bg-paper-2/70 hover:text-ink",
                 )
               }
@@ -65,7 +65,7 @@ function NavItems({ onNavigate, layoutKey }: { onNavigate?: () => void; layoutKe
                   {count && (
                     <span
                       className={cx(
-                        "num relative min-w-6 rounded-full px-1.5 text-center text-[11.5px] leading-5 font-semibold",
+                        "num relative min-w-6 rounded-full px-1.5 text-center text-micro leading-5 font-semibold",
                         to === "/app/customers" ? "text-ink-3" : "bg-coral text-white",
                       )}
                       aria-label={count.label}
@@ -89,7 +89,7 @@ function SideFooter({ onAction }: { onAction?: () => void }) {
   const [aboutOpen, setAboutOpen] = useState(false)
   const { dispatch } = useDemo()
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <Button
         variant="secondary"
         className="w-full justify-start"
@@ -104,14 +104,14 @@ function SideFooter({ onAction }: { onAction?: () => void }) {
       <button
         type="button"
         onClick={() => setAboutOpen(true)}
-        className="flex h-9 items-center gap-3 rounded-[10px] px-3 text-[13.5px] text-ink-2 transition-colors hover:bg-paper-2/70 hover:text-ink"
+        className="flex h-10 items-center gap-3 rounded-[10px] px-3 text-label text-ink-2 transition-colors hover:bg-paper-2/70 hover:text-ink"
       >
         <BookOpenText className="size-4 text-ink-3" aria-hidden /> About this demo
       </button>
       <button
         type="button"
         onClick={() => setResetOpen(true)}
-        className="flex h-9 items-center gap-3 rounded-[10px] px-3 text-[13.5px] text-ink-2 transition-colors hover:bg-paper-2/70 hover:text-ink"
+        className="flex h-10 items-center gap-3 rounded-[10px] px-3 text-label text-ink-2 transition-colors hover:bg-paper-2/70 hover:text-ink"
         data-testid="reset-demo"
       >
         <RotateCcw className="size-4 text-ink-3" aria-hidden /> Reset demo
@@ -120,7 +120,7 @@ function SideFooter({ onAction }: { onAction?: () => void }) {
         href={REPO_URL}
         target="_blank"
         rel="noreferrer"
-        className="flex h-9 items-center gap-3 rounded-[10px] px-3 text-[13.5px] text-ink-2 transition-colors hover:bg-paper-2/70 hover:text-ink"
+        className="flex h-10 items-center gap-3 rounded-[10px] px-3 text-label text-ink-2 transition-colors hover:bg-paper-2/70 hover:text-ink"
       >
         <GithubIcon className="size-4 text-ink-3" /> Source on GitHub
       </a>
@@ -160,13 +160,13 @@ function SideFooter({ onAction }: { onAction?: () => void }) {
 function WorkspaceBadge() {
   const { state } = useDemo()
   return (
-    <div className="flex items-center gap-2.5 rounded-[12px] border border-line bg-surface/70 px-2.5 py-2">
-      <span className="grid size-8 place-items-center rounded-[9px] bg-paper-2 font-display text-[15px] font-semibold text-ink ring-1 ring-line" aria-hidden>
+    <div className="flex items-center gap-3 rounded-[12px] border border-line bg-surface/70 px-3 py-2.5">
+      <span className="grid size-9 place-items-center rounded-[10px] bg-paper-2 text-ui font-semibold text-ink ring-1 ring-line" aria-hidden>
         {state.business.name[0]}
       </span>
       <div className="min-w-0">
-        <p className="truncate text-[13.5px] font-semibold text-ink">{state.business.name}</p>
-        <p className="num truncate text-[11.5px] text-ink-3">{dayAndTime(state.now)}</p>
+        <p className="truncate text-label font-semibold text-ink">{state.business.name}</p>
+        <p className="num truncate text-meta text-ink-3">{dayAndTime(state.now)}</p>
       </div>
     </div>
   )
@@ -177,7 +177,7 @@ export function AppShell() {
   const tour = useTour()
   const location = useLocation()
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[244px_minmax(0,1fr)]">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[236px_minmax(0,1fr)] xl:grid-cols-[256px_minmax(0,1fr)]">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-paper"
@@ -186,7 +186,7 @@ export function AppShell() {
       </a>
 
       <aside
-        className="sticky top-0 hidden h-dvh flex-col gap-5 border-r border-line bg-paper/70 px-3 py-5 backdrop-blur-sm lg:flex"
+        className="sticky top-0 hidden h-dvh flex-col gap-6 border-r border-line bg-paper/70 px-4 py-6 backdrop-blur-sm lg:flex"
         aria-label="Main navigation"
       >
         <Link to="/" className="rounded-md px-2" aria-label="Reklamaton home">
@@ -217,7 +217,7 @@ export function AppShell() {
         </Button>
       </header>
       <Sheet open={menuOpen} onOpenChange={setMenuOpen} title="Reklamaton" side="left" width="sm:max-w-[300px]">
-        <div className="flex flex-col gap-5 p-4">
+        <div className="flex flex-col gap-6 p-5">
           <WorkspaceBadge />
           <nav aria-label="Workspace">
             <NavItems layoutKey="sheet" onNavigate={() => setMenuOpen(false)} />
@@ -227,7 +227,7 @@ export function AppShell() {
       </Sheet>
 
       <div className="min-w-0">
-        <main id="main" key={location.pathname.split("/")[2]} className="mx-auto w-full max-w-[1480px] px-4 pt-5 pb-16 sm:px-6 lg:px-8 lg:pt-6">
+        <main id="main" key={location.pathname.split("/")[2]} className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-20 sm:px-6 sm:pt-8 lg:px-8 lg:pt-10 xl:px-10">
           <Outlet />
         </main>
       </div>

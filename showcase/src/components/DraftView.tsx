@@ -23,6 +23,7 @@ export function DraftView({ message, onApproved, size = "md" }: { message: Outbo
   const { state, dispatch } = useDemo()
   const [error, setError] = useState<string | null>(null)
   const [focus, setFocus] = useState<string | null>(null)
+  const [explained, setExplained] = useState<{ label: string; effect: string } | null>(null)
   const customer = state.customers.find((c) => c.id === message.customer_id)!
   const profile = state.profiles[customer.id]
   const status = STATUS_META[message.status]
@@ -67,13 +68,13 @@ export function DraftView({ message, onApproved, size = "md" }: { message: Outbo
       data-testid={`draft-${customer.id}`}
       aria-label={`${status.label} message for ${customer.name}`}
     >
-      <header className="flex flex-wrap items-center gap-2.5 border-b border-line/80 px-4 py-3">
-        <Avatar id={customer.id} name={customer.name} size={34} />
-        <div className="min-w-0 flex-1">
-          <Link to={`/app/customers/${customer.id}`} className="text-[14px] font-semibold text-ink hover:underline">
+      <header className="flex flex-wrap items-center gap-3 border-b border-line/80 px-5 py-4">
+        <Avatar id={customer.id} name={customer.name} size={38} />
+        <div className="min-w-0 flex-1 basis-44">
+          <Link to={`/app/customers/${customer.id}`} className="text-heading font-semibold text-ink hover:underline">
             {customer.name}
           </Link>
-          <p className="truncate text-[12px] text-ink-3">
+          <p className="truncate text-label text-ink-3">
             {CHANNEL_LABEL[message.channel]} · {message.channel === "email" ? customer.email : customer.phone}
           </p>
         </div>
@@ -96,55 +97,72 @@ export function DraftView({ message, onApproved, size = "md" }: { message: Outbo
         </span>
       </header>
 
-      <div className="px-4 py-4">
-        <p className={cx("leading-relaxed whitespace-pre-wrap text-ink", size === "lg" ? "text-[15.5px]" : "text-[14.5px]")} data-testid="draft-content">
+      <div className={cx(size === "lg" ? "px-5 py-6 sm:px-7" : "px-5 py-5")}>
+        <p className={cx("max-w-[68ch] whitespace-pre-wrap text-ink", size === "lg" ? "text-body leading-[1.75]" : "text-ui leading-[1.7]")} data-testid="draft-content">
           <FactText text={message.content} facts={facts} active={focus} />
         </p>
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-4 flex items-center gap-2.5">
           <div className="h-1 w-24 overflow-hidden rounded-full bg-paper-2">
             <div
               className={cx("h-full rounded-full", message.content.length > limit * 0.92 ? "bg-amber" : "bg-ink-3/50")}
               style={{ width: `${Math.min(100, (message.content.length / limit) * 100)}%` }}
             />
           </div>
-          <span className="num text-[11.5px] text-ink-3">
+          <span className="num text-meta text-ink-3">
             {message.content.length} / {limit} characters
           </span>
         </div>
       </div>
 
-      <div className="border-t border-line/80 bg-surface-2/70 px-4 py-3">
-        <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Written from {customer.name.split(" ")[0]}&apos;s profile</p>
-        <ul className="mt-2 flex flex-wrap gap-1.5" data-testid="draft-factors">
+      {/* The profile fields the draft used. Pointing at one marks the sentence it wrote and says how. */}
+      <div className="border-t border-line/80 bg-surface-2/70 px-5 py-4">
+        <p className="type-label">Written from {customer.name.split(" ")[0]}&apos;s profile</p>
+        <ul className="mt-2.5 flex flex-wrap gap-2" data-testid="draft-factors">
           {message.factors.map((f) => {
             const kind = kindOf(f.field)
             const marked = facts.some((x) => x.field === f.field)
+            const show = () => {
+              setFocus(marked ? f.field : null)
+              setExplained({ label: f.label, effect: f.effect })
+            }
+            const hide = () => {
+              setFocus(null)
+              setExplained(null)
+            }
             return (
               <li key={f.label}>
                 <button
                   type="button"
-                  disabled={!marked}
-                  onMouseEnter={() => setFocus(f.field)}
-                  onMouseLeave={() => setFocus(null)}
-                  onFocus={() => setFocus(f.field)}
-                  onBlur={() => setFocus(null)}
-                  title={f.effect}
+                  onMouseEnter={show}
+                  onMouseLeave={hide}
+                  onFocus={show}
+                  onBlur={hide}
                   className={cx(
-                    "rounded-[14px] border px-2.5 py-1 text-left text-[12px] leading-[18px] transition-colors",
-                    marked ? cx("bg-surface hover:bg-paper-2", FACT_TONE[kind].border) : "cursor-default border-line bg-surface text-ink-3",
+                    "inline-flex h-8 items-center gap-2 rounded-full border bg-surface px-3 text-meta font-medium text-ink transition-colors hover:bg-paper-2",
+                    marked ? FACT_TONE[kind].border : "border-line text-ink-2",
                   )}
                 >
-                  <span aria-hidden className={cx("mr-1.5 inline-block size-2 rounded-full align-[1px]", FACT_TONE[kind].dot)} />
-                  <span className="font-semibold text-ink">{f.label}</span> <span className="text-ink-3">{f.effect}</span>
+                  <span aria-hidden className={cx("size-2 shrink-0 rounded-full", FACT_TONE[kind].dot)} />
+                  {f.label}
+                  <span className="sr-only">: {f.effect}</span>
                 </button>
               </li>
             )
           })}
         </ul>
+        <p className="mt-2.5 min-h-5 text-meta text-ink-3" aria-hidden>
+          {explained ? (
+            <>
+              <span className="font-medium text-ink-2">{explained.label}:</span> {explained.effect}
+            </>
+          ) : (
+            "Point at a field to see the sentence it wrote."
+          )}
+        </p>
       </div>
 
       {stale && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber/20 bg-amber-soft/60 px-4 py-2 text-[12.5px] text-amber">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber/20 bg-amber-soft/60 px-5 py-2.5 text-label text-amber">
           <span className="inline-flex items-center gap-1.5">
             <AlertTriangle className="size-4" aria-hidden /> Profile changed since this draft was written.
           </span>
@@ -154,7 +172,7 @@ export function DraftView({ message, onApproved, size = "md" }: { message: Outbo
         </div>
       )}
 
-      <footer className="flex flex-wrap items-center gap-2 border-t border-line/80 px-4 py-3">
+      <footer className="flex flex-wrap items-center gap-3 border-t border-line/80 px-5 py-4">
         {message.status === "draft" && (
           <Button
             variant="success"
@@ -171,11 +189,11 @@ export function DraftView({ message, onApproved, size = "md" }: { message: Outbo
             <Button variant="secondary" size="sm" onClick={markSent} data-testid={`mark-sent-${customer.id}`}>
               <Send aria-hidden /> Mark as sent
             </Button>
-            <span className="text-[12px] text-ink-3">Approved {message.approved_at ? clockTime(message.approved_at) : ""} · ready for export</span>
+            <span className="text-meta text-ink-3">Approved {message.approved_at ? clockTime(message.approved_at) : ""} · ready for export</span>
           </>
         )}
         {message.status === "sent" && (
-          <span className="text-[12px] text-ink-3">
+          <span className="text-meta text-ink-3">
             Marked as sent {message.sent_at ? relativeTime(message.sent_at, state.now) : ""}. No message was delivered by Reklamaton.
           </span>
         )}
@@ -186,7 +204,7 @@ export function DraftView({ message, onApproved, size = "md" }: { message: Outbo
           <p
             id={`block-${message.id}`}
             role={error ? "alert" : undefined}
-            className="flex w-full items-start gap-1.5 text-[12.5px] text-rose"
+            className="flex w-full items-start gap-2 rounded-[10px] border border-rose/15 bg-rose-soft/60 px-3.5 py-3 text-label leading-snug text-rose"
             data-testid={`block-${customer.id}`}
           >
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />

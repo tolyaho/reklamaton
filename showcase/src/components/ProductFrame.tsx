@@ -36,11 +36,11 @@ export function ProductFrame({
 }) {
   return (
     <div role="region" aria-label={label} data-product-ui className={cx("window @container flex flex-col", className)}>
-      <div className="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-surface-2 px-3.5">
+      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-line bg-surface-2 px-4">
         <Mark size={20} />
-        <p className="flex min-w-0 items-center gap-1.5 text-[12.5px]">
-          <span className="hidden text-ink-3 @md:inline">Studio Halden</span>
-          <span className="hidden text-line-strong @md:inline" aria-hidden>
+        <p className="flex min-w-0 items-center gap-1.5 text-label whitespace-nowrap">
+          <span className="hidden text-ink-3 @2xl:inline">Studio Halden</span>
+          <span className="hidden text-line-strong @2xl:inline" aria-hidden>
             /
           </span>
           <span className="truncate font-medium text-ink">{crumb}</span>

@@ -29,7 +29,7 @@ export function Badge({ tone = "neutral", children, className }: { tone?: BadgeT
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-medium leading-5 whitespace-nowrap",
+        "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-meta font-medium whitespace-nowrap",
         BADGE_TONES[tone],
         className,
       )}
@@ -110,7 +110,7 @@ export function ScoreMeter({ value, label = "Lead score" }: { value: number; lab
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         />
       </div>
-      <span className="num w-8 text-right text-[13px] font-semibold text-ink">{value}</span>
+      <span className="num w-8 text-right text-label font-semibold text-ink">{value}</span>
     </div>
   )
 }
@@ -132,7 +132,7 @@ export function Provenance({ kind, children, className }: { kind: ProvenanceKind
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[11px] font-medium leading-4",
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-micro font-medium",
         p.className,
         className,
       )}
@@ -164,22 +164,22 @@ export function Panel({
   return (
     <section className={cx("surface flex min-w-0 flex-col", className)} {...rest}>
       {(title || actions) && (
-        <header className="flex items-start justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
+        <header className="flex items-start justify-between gap-4 px-5 pt-5 pb-1 sm:px-6 sm:pt-6">
           <div className="min-w-0">
-            {title && <h2 className="text-[15px] font-semibold text-ink">{title}</h2>}
-            {description && <p className="mt-0.5 text-[13px] text-ink-3">{description}</p>}
+            {title && <h2 className="type-card">{title}</h2>}
+            {description && <p className="mt-1 max-w-prose text-label text-ink-3">{description}</p>}
           </div>
           {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
         </header>
       )}
-      <div className={cx("min-w-0 flex-1", bodyClassName ?? "p-4 sm:p-5")}>{children}</div>
+      <div className={cx("min-w-0 flex-1", bodyClassName ?? "p-5 sm:p-6")}>{children}</div>
     </section>
   )
 }
 
 export function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="rounded border border-line-strong bg-surface px-1.5 py-px font-mono text-[11px] text-ink-2 shadow-[0_1px_0_var(--color-line-strong)]">
+    <kbd className="rounded border border-line-strong bg-surface px-1.5 py-px font-mono text-micro text-ink-2 shadow-[0_1px_0_var(--color-line-strong)]">
       {children}
     </kbd>
   )
@@ -187,12 +187,12 @@ export function Kbd({ children }: { children: ReactNode }) {
 
 export function EmptyState({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-2.5 px-6 py-12 text-center">
       <span className="grid size-11 place-items-center rounded-full bg-paper-2 text-ink-3 ring-1 ring-line">
         <Icon className="size-5" aria-hidden />
       </span>
-      <p className="text-[14px] font-semibold text-ink">{title}</p>
-      {children && <div className="max-w-sm text-[13px] text-ink-3">{children}</div>}
+      <p className="text-ui font-semibold text-ink">{title}</p>
+      {children && <div className="max-w-sm text-label text-ink-3">{children}</div>}
     </div>
   )
 }
