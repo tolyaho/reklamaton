@@ -8,7 +8,7 @@ import { FactChip, FactText } from "@/components/facts"
 import { Memory } from "@/components/Memory"
 import { ProductFrame } from "@/components/ProductFrame"
 import { Thread } from "@/components/Thread"
-import { Avatar, Button, StageBadge } from "@/components/ui"
+import { Avatar, Button } from "@/components/ui"
 import * as seed from "@/demo/data"
 import { useDemo } from "@/demo/context"
 import { downloadOutboxCsv } from "@/demo/download"
@@ -79,29 +79,29 @@ export function ActConversation() {
             Conversations <span className="text-line-strong">/</span> Ines Calder
           </>
         }
-        right={<span className="rounded-full bg-amber-soft px-2 py-0.5 text-[11px] font-medium text-amber">Scripted conversation</span>}
-        className="h-[520px] sm:h-[560px]"
+        right={<span className="rounded-full bg-amber-soft px-2.5 py-1 text-micro font-medium text-amber">Scripted conversation</span>}
+        className="h-[560px] sm:h-[600px]"
         bodyClassName="flex"
       >
-        <div className="grid min-w-0 flex-1 @3xl:grid-cols-[minmax(0,1fr)_232px]">
+        <div className="grid min-w-0 flex-1 @3xl:grid-cols-[minmax(0,1fr)_252px]">
           <div className="flex min-h-0 min-w-0 flex-col">
-            <div ref={scroller} className="scroll-thin @container min-h-0 flex-1 overflow-y-auto px-4 py-5 @lg:px-6" data-testid="story-thread">
+            <div ref={scroller} className="scroll-thin @container min-h-0 flex-1 overflow-y-auto px-4 py-6 @lg:px-7" data-testid="story-thread">
               {!count && !playback && next && (
                 <div className="flex flex-col items-start">
-                  <span className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-coral px-2 py-0.5 text-[11px] font-semibold text-white">
+                  <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-coral px-2.5 py-0.5 text-micro font-semibold text-white">
                     New message
                   </span>
-                  <div className="max-w-[88%] rounded-[18px] rounded-bl-md border border-dashed border-line-strong bg-surface-2 px-3.5 py-2.5 text-[15px] leading-relaxed text-ink-2 @lg:max-w-[80%]">
+                  <div className="max-w-[88%] rounded-[20px] rounded-bl-md border border-dashed border-line-strong bg-surface-2 px-4.5 py-3 text-body leading-[1.65] text-ink-2 @lg:max-w-[78%]">
                     {next.customer}
                   </div>
                 </div>
               )}
               <Thread chat={chat} size="lg" days={false} />
             </div>
-            <div className="flex flex-col gap-3 border-t border-line bg-surface-2/80 px-4 py-3 @lg:flex-row @lg:items-center @lg:px-5">
+            <div className="flex flex-col gap-3 border-t border-line bg-surface-2/80 px-5 py-4 @lg:flex-row @lg:items-center @lg:px-6">
               {next ? (
                 <>
-                  <p className="min-w-0 flex-1 text-[12.5px] text-ink-3">
+                  <p className="min-w-0 flex-1 text-label text-ink-3">
                     <span className="font-semibold text-ink-2">
                       Message {chat.played + 1} of {chat.script.length}
                     </span>{" "}
@@ -120,7 +120,7 @@ export function ActConversation() {
                 </>
               ) : (
                 <>
-                  <p className="min-w-0 flex-1 text-[13px] text-ink-2">
+                  <p className="min-w-0 flex-1 text-ui text-ink-2">
                     <Check className="mr-1 inline size-4 -translate-y-px text-sage" aria-hidden />
                     All {chat.script.length} messages read.
                   </p>
@@ -148,8 +148,8 @@ function Heard() {
       aria-label="What the profile took from the chat"
       data-testid="story-heard"
     >
-      <p className="border-b border-line px-4 py-2.5 text-[12px] font-semibold text-ink">Heard so far</p>
-      <ol className="scroll-thin flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
+      <p className="border-b border-line px-5 py-3.5 text-label font-semibold text-ink">Heard so far</p>
+      <ol className="scroll-thin flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3.5">
         <AnimatePresence initial={false}>
           {items.map((it) => (
             <motion.li
@@ -158,25 +158,25 @@ function Heard() {
               initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="rounded-[12px] border border-line bg-surface px-3 py-2"
+              className="rounded-[12px] border border-line bg-surface px-3.5 py-2.5"
             >
-              <p className="flex items-center gap-1.5 text-[10.5px] font-semibold tracking-[0.08em] text-ink-3 uppercase">
+              <p className="flex items-center gap-2 text-meta text-ink-3">
                 <span aria-hidden className={cx("size-2 rounded-full", FACT_TONE[it.kind].dot)} />
                 {it.label}
-                <span className="ml-auto font-medium tracking-normal normal-case">msg {it.turn + 1}</span>
+                <span className="ml-auto text-micro">msg {it.turn + 1}</span>
               </p>
-              <p className="mt-0.5 text-[13px] font-medium text-ink">{it.value}</p>
+              <p className="mt-1 text-label font-medium text-ink">{it.value}</p>
             </motion.li>
           ))}
         </AnimatePresence>
         {!items.length &&
           (["interest", "budget", "concern", "intent"] as const).map((k) => (
-            <li key={k} className="rounded-[12px] border border-dashed border-line-strong px-3 py-2" aria-hidden>
-              <p className="flex items-center gap-1.5 text-[10.5px] font-semibold tracking-[0.08em] text-ink-3 uppercase">
+            <li key={k} className="rounded-[12px] border border-dashed border-line-strong px-3.5 py-2.5" aria-hidden>
+              <p className="flex items-center gap-2 text-meta text-ink-3 capitalize">
                 <span className={cx("size-2 rounded-full opacity-50", FACT_TONE[k].dot)} />
                 {k === "intent" ? "Stage" : k}
               </p>
-              <p className="mt-1 h-2 w-16 rounded-full bg-line" />
+              <p className="mt-2 h-2 w-16 rounded-full bg-line" />
             </li>
           ))}
       </ol>
@@ -225,27 +225,27 @@ export function ActMemory() {
           Customers <span className="text-line-strong">/</span> Ines Calder
         </>
       }
-      className="max-h-[720px] sm:h-[640px]"
+      className="max-h-[760px] sm:h-[680px]"
       bodyClassName="flex"
     >
-      <div className="grid min-w-0 flex-1 @3xl:grid-cols-[330px_minmax(0,1fr)]">
+      <div className="grid min-w-0 flex-1 @3xl:grid-cols-[344px_minmax(0,1fr)]">
         <div className="scroll-thin min-h-0 overflow-y-auto border-line @3xl:border-r" data-testid="story-memory">
           <Memory customerId={INES} variant="story" onSource={(field, messageId) => setFocus({ field, messageId })} activeField={focus?.field ?? null} />
           {remaining > 0 && (
-            <div className="border-t border-line p-4 @3xl:hidden">
+            <div className="border-t border-line p-5 @3xl:hidden">
               <Button variant="primary" size="sm" onClick={() => play(INES_CHAT, remaining)} disabled={Boolean(playback)}>
                 <PlayCircle aria-hidden /> {playback ? "Reading…" : history.length ? "Read the rest" : "Read the conversation"}
               </Button>
             </div>
           )}
         </div>
-        <div className="scroll-thin hidden min-h-0 overflow-y-auto bg-surface-2/50 px-5 py-4 @3xl:block" data-testid="story-timeline">
-          <p className="text-[12px] font-semibold text-ink">How the profile was built</p>
-          <ol className="relative mt-3 flex flex-col gap-3 before:absolute before:top-2 before:bottom-2 before:left-[7px] before:w-px before:bg-line-strong/70">
+        <div className="scroll-thin hidden min-h-0 overflow-y-auto bg-surface-2/50 px-6 py-5 @3xl:block" data-testid="story-timeline">
+          <p className="text-label font-semibold text-ink">How the profile was built</p>
+          <ol className="relative mt-4 flex flex-col gap-4 before:absolute before:top-2 before:bottom-2 before:left-[7px] before:w-px before:bg-line-strong/70">
             <li className="relative pl-6">
               <span aria-hidden className="absolute top-1.5 left-0 size-[15px] rounded-full border-2 border-surface bg-line-strong" />
-              <p className="text-[11.5px] font-medium text-ink-3">Before the chat</p>
-              <p className="mt-0.5 text-[13px] text-ink-2">
+              <p className="text-meta text-ink-3">Before the chat</p>
+              <p className="mt-1 text-label text-ink-2">
                 {STAGE_META[start.lead_stage].label} · score {start.lead_score} · {start.notes[0]?.text}
               </p>
             </li>
@@ -256,8 +256,8 @@ export function ActMemory() {
             </AnimatePresence>
           </ol>
           {remaining > 0 && (
-            <div className="mt-4 rounded-[14px] border border-dashed border-line-strong bg-surface p-4">
-              <p className="text-[13px] text-ink-2">
+            <div className="mt-5 rounded-[14px] border border-dashed border-line-strong bg-surface p-5">
+              <p className="text-label text-ink-2">
                 {history.length ? `${plural(remaining, "message")} still unread.` : "Nothing learned yet: Ines's messages are unread."}
               </p>
               <Button
@@ -294,23 +294,23 @@ function TimelineItem({ record, focus }: { record: TurnRecord; focus: ProfileFie
       data-testid={`timeline-${record.turn + 1}`}
     >
       <span aria-hidden className={cx("absolute top-1.5 left-0 size-[15px] rounded-full border-2 border-surface", FACT_TONE[kind].dot)} />
-      <p className="text-[11.5px] font-medium text-ink-3">
+      <p className="text-meta text-ink-3">
         Message {record.turn + 1} · {clockTime(record.message.created_at)}
       </p>
       <div
         className={cx(
-          "mt-1 rounded-[12px] border bg-surface px-3 py-2.5 transition-shadow duration-300",
+          "mt-1.5 rounded-[12px] border bg-surface px-4 py-3 transition-shadow duration-300",
           focus ? "border-ink/30 shadow-[0_0_0_3px_rgb(31_28_23/0.06)]" : "border-line",
         )}
       >
-        <p className="text-[13.5px] leading-relaxed text-ink">
-          <Quote className="mr-1 inline size-3 -translate-y-px text-ink-3" aria-hidden />
+        <p className="text-ui leading-relaxed text-ink">
+          <Quote className="mr-1.5 inline size-3.5 -translate-y-px text-ink-3" aria-hidden />
           <FactText text={record.message.content} facts={facts} active={focus} />
         </p>
-        <ul className="mt-2 flex flex-wrap gap-1">
+        <ul className="mt-2.5 flex flex-wrap gap-1.5">
           {chips.map((c) => (
             <li key={c.field}>
-              <FactChip kind={kindOf(c.field, record.patch)} className="!py-0 !text-[11.5px]">
+              <FactChip kind={kindOf(c.field, record.patch)}>
                 {changeLabel(c)}
               </FactChip>
             </li>
@@ -375,25 +375,25 @@ export function ActCampaign() {
           Campaigns <span className="text-line-strong">/</span> {campaign.name}
         </>
       }
-      className="min-h-[520px] sm:h-[700px]"
+      className="min-h-[560px] sm:h-[740px]"
       bodyClassName="flex flex-col"
     >
-      <div className="grid min-h-0 flex-1 @3xl:grid-cols-[272px_minmax(0,1fr)]">
-        <aside className="scroll-thin hidden min-h-0 flex-col gap-4 overflow-y-auto border-r border-line bg-surface-2/50 p-4 @3xl:flex" aria-label="Audience">
+      <div className="grid min-h-0 flex-1 @3xl:grid-cols-[288px_minmax(0,1fr)]">
+        <aside className="scroll-thin hidden min-h-0 flex-col gap-5 overflow-y-auto border-r border-line bg-surface-2/50 p-5 @3xl:flex" aria-label="Audience">
           <div>
-            <p className="text-[12px] font-semibold text-ink">Audience</p>
-            <ol className="mt-2 flex flex-col gap-1">
+            <p className="text-label font-semibold text-ink">Audience</p>
+            <ol className="mt-3 flex flex-col gap-1.5">
               {funnel.map((s, i) => (
-                <li key={s.label} className="relative h-6 overflow-hidden rounded-[7px] bg-paper-2">
+                <li key={s.label} className="relative h-7 overflow-hidden rounded-[8px] bg-paper-2">
                   <motion.span
-                    className={cx("absolute inset-y-0 left-0 rounded-[7px]", i === funnel.length - 1 ? "bg-fact-intent" : "bg-line-strong/60")}
+                    className={cx("absolute inset-y-0 left-0 rounded-[8px]", i === funnel.length - 1 ? "bg-fact-intent" : "bg-line-strong/60")}
                     initial={false}
                     animate={{ width: `${(s.ids.length / state.customers.length) * 100}%` }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   />
                   <span
                     className={cx(
-                      "relative flex h-full items-center justify-between gap-2 px-2 text-[11px] font-medium",
+                      "relative flex h-full items-center justify-between gap-2 px-2.5 text-micro font-medium",
                       i === funnel.length - 1 ? "text-ink" : "text-ink-2",
                     )}
                   >
@@ -424,20 +424,20 @@ export function ActCampaign() {
                       disabled={!m}
                       aria-pressed={on}
                       className={cx(
-                        "flex w-full items-center gap-2 rounded-[10px] px-2 py-1.5 text-left transition-colors",
+                        "flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left transition-colors",
                         on ? "bg-surface shadow-[0_0_0_1px_var(--color-line-strong)]" : "enabled:hover:bg-surface",
                       )}
                     >
-                      <Avatar id={customer.id} name={customer.name} size={26} />
-                      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-ink">{customer.name}</span>
-                      {customer.id === INES && <span className="rounded-full bg-coral-soft px-1.5 text-[10.5px] font-semibold text-coral-ink">from chat</span>}
+                      <Avatar id={customer.id} name={customer.name} size={30} />
+                      <span className="min-w-0 flex-1 truncate text-label font-medium text-ink">{customer.name}</span>
+                      {customer.id === INES && <span className="rounded-full bg-coral-soft px-2 py-0.5 text-micro font-semibold text-coral-ink">from chat</span>}
                       {m ? (
                         <span
-                          className={cx("size-2 rounded-full", m.status === "approved" ? "bg-sage" : m.status === "sent" ? "bg-indigo" : "bg-ink-3/50")}
+                          className={cx("size-2 shrink-0 rounded-full", m.status === "approved" ? "bg-sage" : m.status === "sent" ? "bg-indigo" : "bg-ink-3/50")}
                           aria-label={m.status}
                         />
                       ) : (
-                        <StageBadge stage={profile.lead_stage} className="!px-1.5 !text-[10.5px]" />
+                        <span className="sr-only">{STAGE_META[profile.lead_stage].label}</span>
                       )}
                     </button>
                   </motion.li>
@@ -446,18 +446,18 @@ export function ActCampaign() {
             </AnimatePresence>
           </ul>
           {!ines.check.matches && (
-            <div className="rounded-[12px] border border-dashed border-line-strong bg-surface p-3" data-testid="story-ines-out">
-              <div className="flex items-center gap-2">
-                <Avatar id={INES} name="Ines Calder" size={26} />
-                <p className="text-[12.5px] font-medium text-ink">Ines Calder · not yet</p>
+            <div className="rounded-[12px] border border-dashed border-line-strong bg-surface p-4" data-testid="story-ines-out">
+              <div className="flex items-center gap-2.5">
+                <Avatar id={INES} name="Ines Calder" size={30} />
+                <p className="text-label font-medium text-ink">Ines Calder · not yet</p>
               </div>
-              <p className="mt-1 text-[12px] text-ink-3">{ines.check.reasons.join(" · ")}</p>
+              <p className="mt-2 text-meta text-ink-3">{ines.check.reasons.join(" · ")}</p>
               {remaining > 0 && (
                 <button
                   type="button"
                   onClick={() => play(INES_CHAT, 1)}
                   disabled={Boolean(playback)}
-                  className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-coral-ink hover:underline disabled:opacity-50"
+                  className="mt-2.5 inline-flex items-center gap-1.5 text-label font-semibold text-coral-ink hover:underline disabled:opacity-55"
                 >
                   <Play className="size-3.5" aria-hidden /> Read her first message
                 </button>
@@ -466,14 +466,14 @@ export function ActCampaign() {
           )}
         </aside>
 
-        <div className="scroll-thin min-h-0 overflow-y-auto p-3 sm:p-4" data-testid="story-draft">
-          <div className="mb-3 flex items-center gap-2 rounded-[12px] border border-line bg-surface-2 px-3 py-2 @3xl:hidden">
+        <div className="scroll-thin min-h-0 overflow-y-auto p-3 sm:p-5" data-testid="story-draft">
+          <div className="mb-4 flex items-center gap-2.5 rounded-[12px] border border-line bg-surface-2 px-3.5 py-2.5 @3xl:hidden">
             <span className="flex -space-x-2">
               {matching.slice(0, 6).map((r) => (
                 <Avatar key={r.customer.id} id={r.customer.id} name={r.customer.name} size={24} className="ring-2 ring-surface-2" />
               ))}
             </span>
-            <p className="min-w-0 flex-1 truncate text-[12.5px] text-ink-2">
+            <p className="min-w-0 flex-1 truncate text-label text-ink-2">
               <span className="num font-semibold text-ink">{matching.length}</span> in the audience{ines.check.matches ? ", Ines included" : ", Ines not yet"}
             </p>
           </div>
@@ -490,13 +490,13 @@ export function ActCampaign() {
               </motion.div>
             </AnimatePresence>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-center">
+            <div className="flex h-full flex-col items-center justify-center gap-5 px-4 text-center">
               <span className="flex -space-x-2.5">
                 {matching.slice(0, 7).map((r) => (
                   <Avatar key={r.customer.id} id={r.customer.id} name={r.customer.name} size={42} className="ring-2 ring-surface" />
                 ))}
               </span>
-              <p className="display-sm max-w-sm text-[22px] leading-tight font-semibold text-ink">
+              <p className="type-title max-w-sm text-ink">
                 {ines.check.matches ? "Ines is in. Write one draft per customer." : `${plural(matching.length, "customer")} in the audience.`}
               </p>
               <Button variant="primary" size="lg" onClick={generate} disabled={!undrafted.length} data-testid="story-generate">
@@ -505,18 +505,18 @@ export function ActCampaign() {
             </div>
           )}
           {selected && undrafted.length > 0 && (
-            <button type="button" onClick={generate} className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink-2 hover:text-ink">
+            <button type="button" onClick={generate} className="mt-4 inline-flex items-center gap-1.5 text-label font-semibold text-ink-2 hover:text-ink">
               <Wand2 className="size-3.5" aria-hidden /> Write {plural(undrafted.length, "more draft")}
             </button>
           )}
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 border-t border-line bg-surface-2 px-4 py-2.5">
-        <p className="mr-auto text-[12.5px] text-ink-3">
+      <div className="flex flex-wrap items-center gap-3 border-t border-line bg-surface-2 px-5 py-3">
+        <p className="mr-auto text-label text-ink-3">
           <span className="num font-semibold text-ink">{plural(exportable, "approved message")}</span> · nothing is sent from here
         </p>
         {exported && (
-          <span className="text-[12px] font-medium text-sage" role="status" data-testid="story-export-status">
+          <span className="text-meta font-medium text-sage" role="status" data-testid="story-export-status">
             <Check className="mr-1 inline size-3.5" aria-hidden />
             {exported}
           </span>

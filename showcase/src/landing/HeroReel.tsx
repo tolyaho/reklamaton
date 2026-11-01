@@ -77,7 +77,7 @@ export function HeroReel() {
             }
             right={
               <>
-                <span className="hidden rounded-full bg-amber-soft px-2 py-0.5 text-[11px] font-medium text-amber @lg:inline">Scripted demo replay</span>
+                <span className="hidden rounded-full bg-amber-soft px-2.5 py-1 text-micro font-medium text-amber @lg:inline">Scripted demo replay</span>
                 {!still && (
                   <button
                     type="button"
@@ -87,7 +87,7 @@ export function HeroReel() {
                         setPaused(false)
                       } else setPaused((p) => !p)
                     }}
-                    className="grid size-7 place-items-center rounded-full text-ink-2 ring-1 ring-line transition-colors hover:bg-paper-2 hover:text-ink"
+                    className="grid size-8 place-items-center rounded-full text-ink-2 ring-1 ring-line transition-colors hover:bg-paper-2 hover:text-ink"
                     aria-label={atEnd ? "Replay" : paused ? "Play the replay" : "Pause the replay"}
                     data-testid="reel-toggle"
                   >
@@ -101,15 +101,15 @@ export function HeroReel() {
           >
             <div className="grid min-h-0 flex-1 @xl:grid-cols-[minmax(0,1fr)_minmax(236px,288px)]">
               <div className="relative flex min-h-0 flex-col">
-                <div className="flex items-center gap-3 border-b border-line px-4 py-2.5">
-                  <Avatar id={1} name="Ines Calder" size={32} />
+                <div className="flex items-center gap-3 border-b border-line px-5 py-3">
+                  <Avatar id={1} name="Ines Calder" size={34} />
                   <div className="min-w-0">
-                    <p className="text-[13.5px] font-semibold text-ink">Ines Calder</p>
-                    <p className="truncate text-[11.5px] text-ink-3">Calder Bakehouse · WhatsApp · Mira replies</p>
+                    <p className="text-ui font-semibold text-ink">Ines Calder</p>
+                    <p className="truncate text-meta text-ink-3">Calder Bakehouse · WhatsApp · Mira replies</p>
                   </div>
                 </div>
                 <div className="relative min-h-0 flex-1 overflow-hidden">
-                  <div className="absolute inset-x-0 bottom-0 px-4 pt-4 pb-4 @lg:px-5">
+                  <div className="absolute inset-x-0 bottom-0 px-4 pt-4 pb-5 @lg:px-6">
                     <Thread chat={b.state.chats[0]} days={false} compactReplies />
                   </div>
                   <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-surface to-transparent" />
@@ -122,23 +122,23 @@ export function HeroReel() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
                       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                      className="absolute inset-x-3 bottom-3 rounded-[16px] border border-line bg-surface p-4 shadow-pop @lg:inset-x-5 @lg:bottom-5"
+                      className="absolute inset-x-3 bottom-3 rounded-[16px] border border-line bg-surface p-5 shadow-pop @lg:inset-x-5 @lg:bottom-5"
                       data-testid="reel-draft"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Draft · January packaging slots</p>
-                        <span className="ml-auto rounded-full bg-indigo-soft px-2 py-0.5 text-[11px] font-medium text-indigo">template composer</span>
+                        <p className="type-label">Draft · January packaging slots</p>
+                        <span className="ml-auto rounded-full bg-indigo-soft px-2.5 py-0.5 text-micro font-medium text-indigo">template composer</span>
                       </div>
-                      <p className="mt-2 line-clamp-6 text-[13.5px] leading-relaxed whitespace-pre-line text-ink">
+                      <p className="mt-2.5 line-clamp-6 text-label leading-relaxed whitespace-pre-line text-ink">
                         <FactText text={reel.draft.content.split("\n\nBest,")[0]} facts={draftFacts(reel.draft)} />
                       </p>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-[12px] text-ink-3">
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-meta text-ink-3">
                           <Check className="size-3.5 text-sage" aria-hidden /> Waits for a person to approve
                         </span>
                         <Link
                           to="/app/conversations/1"
-                          className="ml-auto inline-flex items-center gap-1 text-[12.5px] font-semibold text-coral-ink hover:underline"
+                          className="ml-auto inline-flex items-center gap-1 text-label font-semibold text-coral-ink hover:underline"
                         >
                           Try it yourself <ArrowRight className="size-3.5" aria-hidden />
                         </Link>
@@ -149,7 +149,7 @@ export function HeroReel() {
               </div>
 
               <div className="hidden min-h-0 flex-col overflow-hidden border-l border-line bg-surface-2/50 @xl:flex">
-                <p className="border-b border-line px-4 py-2.5 text-[12px] font-semibold text-ink">Customer memory</p>
+                <p className="border-b border-line px-5 py-3 text-label font-semibold text-ink">Customer memory</p>
                 <div className="scroll-thin min-h-0 flex-1 overflow-hidden">
                   <Memory customerId={1} variant="compact" announce={false} />
                 </div>
@@ -157,7 +157,7 @@ export function HeroReel() {
               </div>
             </div>
 
-            <nav aria-label="Replay steps" className="flex shrink-0 items-center gap-1.5 border-t border-line bg-surface-2 px-3 py-2">
+            <nav aria-label="Replay steps" className="flex shrink-0 items-center gap-2 border-t border-line bg-surface-2 px-4 py-2.5">
               {SEGMENTS.map((label, i) => {
                 const beatsIn = reel.beats.filter((x) => segmentOf(x) === i)
                 const done = i < current ? 1 : i > current ? 0 : (beatsIn.indexOf(b) + 1) / beatsIn.length
@@ -166,14 +166,14 @@ export function HeroReel() {
                     key={label}
                     type="button"
                     onClick={() => jump(i)}
-                    className="group flex flex-1 flex-col gap-1 rounded-md px-1 py-0.5 text-left"
+                    className="group flex flex-1 flex-col gap-1.5 rounded-md px-1 py-0.5 text-left"
                     aria-label={i < 4 ? `Show message ${i + 1}` : "Show the draft"}
                     aria-current={i === current ? "step" : undefined}
                   >
                     <span className="relative h-1 overflow-hidden rounded-full bg-line">
                       <span className="absolute inset-y-0 left-0 rounded-full bg-ink transition-[width] duration-500" style={{ width: `${done * 100}%` }} />
                     </span>
-                    <span className={cx("text-[10.5px] font-medium whitespace-nowrap", i === current ? "text-ink" : "text-ink-3 group-hover:text-ink-2")}>
+                    <span className={cx("text-micro font-medium whitespace-nowrap", i === current ? "text-ink" : "text-ink-3 group-hover:text-ink-2")}>
                       {i < 4 ? (
                         <>
                           <span className="hidden @md:inline">Message </span>
@@ -199,10 +199,9 @@ function CampaignRow({ state }: { state: DemoState }) {
   const campaign = state.campaigns[0]
   const check = checkSegment(state.customers[0], state.profiles[1], campaign.segment, state.now)
   return (
-    <div className="border-t border-line px-4 py-3">
-      <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Campaign</p>
-      <div className="mt-1.5 flex items-center justify-between gap-2">
-        <p className="truncate text-[13px] font-medium text-ink">{campaign.name}</p>
+    <div className="border-t border-line px-5 py-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="type-meta">Campaign</p>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={String(check.matches)}
@@ -210,7 +209,7 @@ function CampaignRow({ state }: { state: DemoState }) {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 480, damping: 26 }}
             className={cx(
-              "shrink-0 rounded-full px-2 py-0.5 text-[11.5px] font-medium",
+              "shrink-0 rounded-full px-2.5 py-0.5 text-meta font-medium",
               check.matches ? "bg-sage text-white" : "bg-paper-2 text-ink-3 ring-1 ring-line",
             )}
           >
@@ -218,6 +217,7 @@ function CampaignRow({ state }: { state: DemoState }) {
           </motion.span>
         </AnimatePresence>
       </div>
+      <p className="mt-1 truncate text-label font-medium text-ink">{campaign.name}</p>
     </div>
   )
 }
@@ -228,7 +228,7 @@ function MemoryStrip({ state, beat }: { state: DemoState; beat: Beat }) {
   const fresh = beat.kind === "learn" ? new Set(state.lastProfileChange?.changes.map((c) => c.field)) : new Set<string>()
   const glow = (f: string) => (fresh.has(f) ? "ring-2 ring-offset-1 ring-offset-surface-2 ring-ink/20" : "")
   return (
-    <div className="flex flex-wrap items-center gap-1.5 border-t border-line bg-surface-2/70 px-3 py-2.5 @xl:hidden" aria-label="Customer memory">
+    <div className="flex flex-wrap items-center gap-1.5 border-t border-line bg-surface-2/70 px-4 py-3 @xl:hidden" aria-label="Customer memory">
       <span className={cx("rounded-full", glow("lead_stage"))}>
         <StageBadge stage={p.lead_stage} />
       </span>
@@ -247,7 +247,7 @@ function MemoryStrip({ state, beat }: { state: DemoState; beat: Beat }) {
           {o.split(":")[0]}
         </FactChip>
       ))}
-      {!p.interests.length && <span className="text-[12px] text-ink-3">Profile fills in as she writes</span>}
+      {!p.interests.length && <span className="text-meta text-ink-3">Profile fills in as she writes</span>}
     </div>
   )
 }

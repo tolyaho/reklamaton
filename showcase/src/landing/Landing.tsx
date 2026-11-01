@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion"
-import { ArrowDown, ArrowRight, Compass } from "lucide-react"
+import { ArrowDown, ArrowRight, ChevronDown, Compass } from "lucide-react"
 import { useState, type ComponentType } from "react"
 import { Link } from "react-router"
 import { AboutDemo } from "@/components/AboutDemo"
@@ -66,11 +66,11 @@ export function Landing() {
         Skip to content
       </a>
       <header className="sticky top-0 z-30 border-b border-line/60 bg-paper/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[1360px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto flex h-[68px] max-w-[1360px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
           <Link to="/" aria-label="Reklamaton home">
             <Wordmark />
           </Link>
-          <nav aria-label="Page" className="hidden items-center gap-7 text-[14px] text-ink-2 md:flex">
+          <nav aria-label="Page" className="hidden items-center gap-8 text-ui text-ink-2 md:flex">
             <a href="#story" className="hover:text-ink">
               How it works
             </a>
@@ -93,15 +93,15 @@ export function Landing() {
 
       <main id="content">
         {/* Hero: the product, playing. */}
-        <section className="mx-auto grid max-w-[1360px] gap-10 px-4 pt-10 pb-20 sm:px-6 lg:grid-cols-[minmax(0,0.76fr)_minmax(0,1.24fr)] lg:items-center lg:gap-12 lg:px-10 lg:pt-12 lg:pb-28">
+        <section className="mx-auto grid max-w-[1360px] gap-12 px-4 pt-12 pb-24 sm:px-6 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:items-center lg:gap-14 lg:px-10 lg:pt-12 lg:pb-32">
           <div className="min-w-0">
-            <motion.h1 {...rise(0)} className="display text-[46px] leading-[0.98] font-semibold text-ink sm:text-[62px] lg:text-[clamp(46px,7.2vh,68px)]">
+            <motion.h1 {...rise(0)} className="display text-[clamp(36px,10.4vw,48px)] leading-[1.04] text-ink sm:text-[58px] lg:text-[clamp(40px,min(6.6vh,4.3vw),62px)]">
               Every conversation <span className="text-coral italic">becomes an opportunity.</span>
             </motion.h1>
-            <motion.p {...rise(0.08)} className="mt-6 max-w-[29rem] text-[17.5px] leading-relaxed text-ink-2">
+            <motion.p {...rise(0.08)} className="mt-7 max-w-[30rem] text-lead text-ink-2">
               Reklamaton remembers what customers tell you in chat and turns it into personalized drafts that a person approves.
             </motion.p>
-            <motion.div {...rise(0.14)} className="mt-8 flex flex-wrap items-center gap-3">
+            <motion.div {...rise(0.14)} className="mt-9 flex flex-wrap items-center gap-3">
               <Link to="/app/overview" className={buttonClass("primary", "lg", "lg:h-11 lg:px-4 xl:h-12 xl:px-5")} data-testid="hero-explore">
                 Explore interactive demo <ArrowRight aria-hidden />
               </Link>
@@ -109,7 +109,7 @@ export function Landing() {
                 See how it works <ArrowDown aria-hidden />
               </a>
             </motion.div>
-            <motion.div {...rise(0.2)} className="mt-7">
+            <motion.div {...rise(0.2)} className="mt-8">
               <DemoDisclosure testId="hero-disclosure" />
             </motion.div>
           </div>
@@ -127,18 +127,18 @@ export function Landing() {
                 id={act.id}
                 aria-labelledby={`${act.id}-title`}
                 className={cx(
-                  "grid scroll-mt-16 gap-8 py-16 sm:py-20 lg:grid-cols-[minmax(0,0.6fr)_minmax(0,1.4fr)] lg:gap-14 lg:py-28",
+                  "grid scroll-mt-16 gap-10 py-20 sm:py-24 lg:grid-cols-[minmax(0,0.68fr)_minmax(0,1.32fr)] lg:gap-14 lg:py-36 xl:gap-16",
                   i > 0 && "border-t border-line",
                 )}
                 data-testid={`act-${act.id}`}
               >
-                <div className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+                <div className="min-w-0 lg:sticky lg:top-32 lg:self-start">
                   <Flow active={i} />
-                  <h2 id={`${act.id}-title`} className="display mt-6 text-[36px] leading-[1.02] font-semibold text-ink sm:text-[46px] xl:text-[54px]">
+                  <h2 id={`${act.id}-title`} className="display mt-7 text-[34px] leading-[1.06] text-ink sm:text-[44px] xl:text-[48px]">
                     {act.title} <span className="text-ink-3">{act.muted}</span>
                   </h2>
-                  <p className="mt-5 max-w-[25rem] text-[16.5px] leading-relaxed text-ink-2">{act.body}</p>
-                  {i === 0 && <FactLegend className="mt-6" />}
+                  <p className="mt-6 max-w-[26rem] text-lead text-ink-2">{act.body}</p>
+                  {i === 0 && <FactLegend className="mt-8" />}
                 </div>
                 <div className="min-w-0">
                   <act.Window />
@@ -149,17 +149,17 @@ export function Landing() {
         </section>
 
         {/* Proof: what runs underneath. */}
-        <section aria-labelledby="proof-title" className="mx-auto max-w-[1360px] px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:gap-16">
+        <section aria-labelledby="proof-title" className="mx-auto max-w-[1360px] px-4 py-24 sm:px-6 lg:px-10 lg:py-36">
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:gap-16">
             <div>
-              <h2 id="proof-title" className="display text-[36px] leading-[1.02] font-semibold text-ink sm:text-[46px]">
+              <h2 id="proof-title" className="display text-[34px] leading-[1.06] text-ink sm:text-[44px]">
                 A real backend <span className="text-ink-3">underneath.</span>
               </h2>
-              <p className="mt-5 max-w-[27rem] text-[16.5px] leading-relaxed text-ink-2">
+              <p className="mt-6 max-w-[27rem] text-lead text-ink-2">
                 FastAPI and SQLite, with OpenAI&apos;s Responses API for replies, profile extraction and drafts. This page runs the same rules in your browser,
                 without a model.
               </p>
-              <div className="mt-7 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-wrap gap-3">
                 <a href={REPO_URL} target="_blank" rel="noreferrer" className={buttonClass("primary", "md")}>
                   <GithubIcon className="size-4" /> Read the source
                 </a>
@@ -170,21 +170,27 @@ export function Landing() {
             </div>
             <Architecture />
           </div>
-          <ul className="mt-12 flex flex-wrap gap-2" aria-label="Rules the code enforces">
-            {RULES.map((r) => (
-              <li key={r} className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] text-ink-2">
-                {r}
-              </li>
-            ))}
-          </ul>
+          <details className="group mt-12 rounded-[16px] border border-line bg-surface/60 lg:mt-14" data-testid="rules">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[16px] px-5 py-4 text-ui font-medium text-ink hover:bg-surface sm:px-6 [&::-webkit-details-marker]:hidden">
+              The {RULES.length} rules the code enforces
+              <ChevronDown className="size-4 shrink-0 text-ink-2 transition-transform group-open:rotate-180" aria-hidden />
+            </summary>
+            <ul className="flex flex-wrap gap-2 px-5 pt-1 pb-5 sm:px-6" aria-label="Rules the code enforces">
+              {RULES.map((r) => (
+                <li key={r} className="rounded-full border border-line bg-surface px-4 py-2 text-label text-ink-2">
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </details>
         </section>
 
-        <section className="mx-auto max-w-[1360px] px-4 pb-20 sm:px-6 lg:px-10">
-          <div className="relative overflow-hidden rounded-[28px] bg-ink px-6 py-14 text-paper sm:px-12 lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-16 lg:py-16">
-            <h2 className="display text-[38px] leading-[1.02] font-semibold sm:text-[52px]">
-              Play it yourself. <span className="text-paper/50">Start to export in two minutes.</span>
+        <section className="mx-auto max-w-[1360px] px-4 pb-24 sm:px-6 lg:px-10">
+          <div className="relative overflow-hidden rounded-[28px] bg-ink px-6 py-16 text-paper sm:px-12 lg:flex lg:items-center lg:justify-between lg:gap-12 lg:px-16 lg:py-20">
+            <h2 className="display text-[36px] leading-[1.06] sm:text-[48px]">
+              Play it yourself. <span className="text-paper/60">Start to export in two minutes.</span>
             </h2>
-            <div className="mt-8 flex shrink-0 flex-wrap gap-3 lg:mt-0">
+            <div className="mt-10 flex shrink-0 flex-wrap gap-3 lg:mt-0">
               <Link to="/app/overview" className={buttonClass("accent", "lg")} data-testid="cta-explore">
                 Explore interactive demo <ArrowRight aria-hidden />
               </Link>
@@ -202,15 +208,21 @@ export function Landing() {
       </main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-[1360px] flex-col gap-4 px-4 py-8 text-[13px] text-ink-3 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-10">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-[1360px] flex-col gap-6 px-4 py-10 text-meta text-ink-3 sm:px-6 md:flex-row md:items-start md:justify-between lg:px-10">
+          <div className="flex flex-col gap-3">
             <Wordmark size={22} className="[&_span]:text-[17px]" />
-            <span>MIT licence</span>
+            <p>
+              MIT licence ·{" "}
+              <a href={REPO_URL} target="_blank" rel="noreferrer" className="text-ink-2 underline decoration-line-strong underline-offset-2 hover:text-ink">
+                Source on GitHub
+              </a>
+            </p>
           </div>
-          <p className="max-w-xl md:text-right">
-            Built by Ho Dang Dung (@tolyaho). The July 2025 prototype was a team project with Dima Nikuradze, who set up its Docker build and docs. Studio
-            Halden and every customer in the demo are fictional.
-          </p>
+          <div className="flex max-w-xl flex-col gap-1 leading-relaxed md:text-right">
+            <p>Built by Ho Dang Dung (@tolyaho).</p>
+            <p>The July 2025 prototype was a team project with Dima Nikuradze, who set up its Docker build and docs.</p>
+            <p>Studio Halden and every customer in the demo are fictional.</p>
+          </div>
         </div>
       </footer>
     </div>
@@ -220,15 +232,15 @@ export function Landing() {
 /** Conversation → Memory → Campaign, with this act's step lit. */
 function Flow({ active }: { active: number }) {
   return (
-    <ol className="flex items-center gap-2 text-[12.5px] font-medium" aria-label={`Step ${active + 1} of 3`}>
+    <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-label font-medium" aria-label={`Step ${active + 1} of 3`}>
       {ACTS.map((a, i) => (
-        <li key={a.id} className="flex items-center gap-2">
-          {i > 0 && <span aria-hidden className={cx("h-px w-5 sm:w-8", i <= active ? "bg-ink" : "bg-line-strong")} />}
+        <li key={a.id} className="flex items-center gap-1.5">
+          {i > 0 && <span aria-hidden className={cx("h-px w-4 sm:w-5", i <= active ? "bg-ink" : "bg-line-strong")} />}
           <a
             href={`#${a.id}`}
             aria-current={i === active ? "step" : undefined}
             className={cx(
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors",
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors",
               i === active ? "bg-ink text-paper" : i < active ? "text-ink-2 hover:text-ink" : "text-ink-3 hover:text-ink-2",
             )}
           >
@@ -251,23 +263,23 @@ const MODULES = [
 /** The backend in one picture: where a message goes and what comes out. */
 function Architecture() {
   return (
-    <figure className="window p-5 sm:p-6" aria-label="Architecture: customer chat to FastAPI to OpenAI, stored in SQLite, exported as CSV">
-      <div className="grid items-stretch gap-3 sm:grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1.4fr)_auto_minmax(0,0.8fr)]">
+    <figure className="window p-5 sm:p-7" aria-label="Architecture: customer chat to FastAPI to OpenAI, stored in SQLite, exported as CSV">
+      <div className="grid items-stretch gap-3 sm:grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1.5fr)_auto_minmax(0,0.8fr)]">
         <Node title="Customer chat" sub="REST or WebSocket" />
         <Arrow />
-        <div className="rounded-[14px] border border-ink/80 bg-ink p-3.5 text-paper">
-          <p className="text-[13.5px] font-semibold">FastAPI backend</p>
-          <ul className="mt-2.5 flex flex-col gap-1.5">
+        <div className="rounded-[14px] border border-ink/80 bg-ink p-4 text-paper">
+          <p className="text-label font-semibold">FastAPI backend</p>
+          <ul className="mt-3 flex flex-col gap-2.5">
             {MODULES.map((m) => (
               <li key={m.file}>
                 <a
                   href={sourceUrl(`reklamaton/${m.file}`)}
                   target="_blank"
                   rel="noreferrer"
-                  className="group flex items-baseline justify-between gap-2 text-[12px]"
+                  className="group flex flex-col text-meta"
                 >
                   <span className="font-mono text-paper group-hover:underline">{m.file}</span>
-                  <span className="truncate text-right text-paper/60">{m.role}</span>
+                  <span className="text-paper/70">{m.role}</span>
                 </a>
               </li>
             ))}
@@ -280,8 +292,8 @@ function Architecture() {
         <Node title="SQLite" sub="customers · profiles · events · outbox" />
         <Node title="CSV export" sub="approved, consented rows only" />
       </div>
-      <figcaption className="mt-4 flex items-center gap-2 rounded-[12px] border border-dashed border-line-strong px-3 py-2 text-[12.5px] text-ink-3">
-        <span className="size-1.5 shrink-0 rounded-full bg-coral" aria-hidden />
+      <figcaption className="mt-5 flex items-start gap-2.5 rounded-[12px] border border-dashed border-line-strong px-4 py-3 text-label text-ink-3">
+        <span className="mt-2 size-1.5 shrink-0 rounded-full bg-coral" aria-hidden />
         This page: the same merge, segment, consent and approval rules ported to TypeScript, with synthetic data and no model.
       </figcaption>
     </figure>
@@ -290,9 +302,9 @@ function Architecture() {
 
 function Node({ title, sub }: { title: string; sub: string }) {
   return (
-    <div className="rounded-[14px] border border-line bg-surface-2 p-3.5">
-      <p className="text-[13.5px] font-semibold text-ink">{title}</p>
-      <p className="mt-1 text-[12px] leading-snug text-ink-3">{sub}</p>
+    <div className="rounded-[14px] border border-line bg-surface-2 p-4">
+      <p className="text-label font-semibold text-ink">{title}</p>
+      <p className="mt-1 text-meta text-ink-3">{sub}</p>
     </div>
   )
 }

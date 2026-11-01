@@ -114,13 +114,13 @@ export function Overview() {
   const optedIn = state.customers.filter((c) => c.marketing_opt_in).length
   const list = tasks(state)
   const [first, ...rest] = list
-  const events = [...state.events].sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id - a.id).slice(0, 6)
+  const events = [...state.events].sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id - a.id).slice(0, 5)
 
   return (
     <PageFade>
       <PageHeader title="Overview" meta={`${state.business.name} · ${dayAndTime(state.now)} · ${total} customers, ${optedIn} opted in`} />
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]" data-tour="workspace">
+      <div className="mt-8 grid gap-6 lg:mt-10 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] xl:gap-x-8 xl:gap-y-12" data-tour="workspace">
         {/* Primary: what needs attention */}
         <section aria-labelledby="attention-title" className="surface flex flex-col overflow-hidden" data-testid="attention">
           <h2 id="attention-title" className="sr-only">
@@ -132,22 +132,22 @@ export function Overview() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
-              className="bg-ink px-5 py-6 text-paper sm:px-7 sm:py-7"
+              className="bg-ink px-6 py-7 text-paper sm:px-8 sm:py-9"
             >
-              <p className="inline-flex items-center gap-2 text-[11.5px] font-semibold tracking-[0.14em] text-paper/60 uppercase">
+              <p className="inline-flex items-center gap-2 text-label font-medium text-paper/70">
                 <first.icon className="size-4 text-coral" aria-hidden /> Up next
               </p>
-              <p className="display mt-3 text-[28px] leading-[1.1] font-semibold sm:text-[34px]">{first.title}</p>
-              {first.quote && <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-paper/80">“{first.quote}”</p>}
-              <div className="mt-5 flex flex-wrap items-center gap-4">
+              <p className="type-title mt-3 sm:text-page">{first.title}</p>
+              {first.quote && <p className="mt-4 max-w-xl text-body text-paper/80">“{first.quote}”</p>}
+              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-4">
                 <Link to={first.to} className={buttonClass("accent", "md")} data-testid="attention-action">
                   {first.action} <ArrowRight aria-hidden />
                 </Link>
-                <span className="flex items-center gap-2 text-[13px] text-paper/70">
-                  <span className="flex -space-x-2">
+                <span className="flex items-center gap-2.5 text-label text-paper/70">
+                  <span className="flex -space-x-1.5">
                     {first.people.slice(0, 6).map((id) => {
                       const c = state.customers.find((x) => x.id === id)!
-                      return <Avatar key={id} id={id} name={c.name} size={28} className="ring-2 ring-ink" />
+                      return <Avatar key={id} id={id} name={c.name} size={30} className="ring-2 ring-ink" />
                     })}
                   </span>
                   {first.detail}
@@ -155,41 +155,41 @@ export function Overview() {
               </div>
             </motion.div>
           ) : (
-            <div className="flex items-center gap-4 bg-ink px-7 py-8 text-paper">
+            <div className="flex items-center gap-4 bg-ink px-8 py-9 text-paper">
               <PartyPopper className="size-7 text-coral" aria-hidden />
-              <p className="display text-[28px] font-semibold">All caught up</p>
+              <p className="type-title">All caught up</p>
             </div>
           )}
           <ul className="divide-y divide-line">
             {rest.slice(0, 4).map((t) => (
               <li key={t.id}>
-                <Link to={t.to} className="group flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-surface-2 sm:px-7">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-paper-2 text-ink-2 ring-1 ring-line">
-                    <t.icon className="size-4" aria-hidden />
+                <Link to={t.to} className="group flex items-center gap-4 px-6 py-4.5 transition-colors hover:bg-surface-2 sm:px-8">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-paper-2 text-ink-2 ring-1 ring-line">
+                    <t.icon className="size-[18px]" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-medium text-ink">{t.title}</span>
-                    <span className="block truncate text-[12.5px] text-ink-3">{t.detail}</span>
+                    <span className="block truncate text-ui font-medium text-ink">{t.title}</span>
+                    <span className="mt-0.5 block truncate text-label text-ink-3">{t.detail}</span>
                   </span>
-                  <span className="hidden text-[12.5px] font-medium text-ink-2 group-hover:text-ink sm:inline">{t.action}</span>
+                  <span className="hidden text-label font-medium text-ink-2 group-hover:text-ink sm:inline">{t.action}</span>
                   <ArrowRight className="size-4 text-ink-3 transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </Link>
               </li>
             ))}
-            {!rest.length && first && <li className="px-7 py-3.5 text-[13px] text-ink-3">Nothing else is waiting.</li>}
+            {!rest.length && first && <li className="px-8 py-4.5 text-label text-ink-3">Nothing else is waiting.</li>}
           </ul>
         </section>
 
         {/* Secondary: the pipeline, one avatar per customer */}
-        <section aria-labelledby="pipeline-title" className="surface flex flex-col p-5 sm:p-6" data-testid="pipeline">
+        <section aria-labelledby="pipeline-title" className="surface flex flex-col p-6 sm:p-8" data-testid="pipeline">
           <div className="flex items-baseline justify-between">
-            <h2 id="pipeline-title" className="text-[15px] font-semibold text-ink">
+            <h2 id="pipeline-title" className="type-card">
               Customer pipeline
             </h2>
-            <p className="num text-[12.5px] text-ink-3">{total} customers</p>
+            <p className="num text-label text-ink-3">{total} customers</p>
           </div>
           <div
-            className="mt-4 flex h-2 overflow-hidden rounded-full bg-paper-2"
+            className="mt-5 flex h-2 overflow-hidden rounded-full bg-paper-2"
             role="img"
             aria-label={LEAD_STAGES.map((s) => `${STAGE_META[s].label} ${counts[s]}`).join(", ")}
           >
@@ -206,21 +206,21 @@ export function Overview() {
             )}
           </div>
           <LayoutGroup>
-            <ol className="mt-4 flex flex-1 flex-col divide-y divide-line/70">
+            <ol className="mt-5 flex flex-1 flex-col divide-y divide-line/70">
               {LEAD_STAGES.map((s) => {
                 const people = state.customers.filter((c) => state.profiles[c.id].lead_stage === s)
                 return (
-                  <li key={s} className="flex min-h-[52px] items-center gap-3 py-2">
-                    <p className="flex w-[92px] shrink-0 items-center gap-2 text-[13px] font-medium text-ink-2">
-                      <span className={cx("size-2 shrink-0 rounded-full", STAGE_FILL[s])} aria-hidden />
+                  <li key={s} className="flex min-h-[60px] items-center gap-4 py-2.5">
+                    <p className="flex w-[104px] shrink-0 items-center gap-2.5 text-ui font-medium text-ink-2">
+                      <span className={cx("size-2.5 shrink-0 rounded-full", STAGE_FILL[s])} aria-hidden />
                       {STAGE_META[s].label}
                     </p>
-                    <p className="num w-6 shrink-0 text-[18px] font-semibold text-ink">{people.length}</p>
-                    <ul className="flex min-w-0 flex-1 flex-wrap gap-1">
+                    <p className="num w-7 shrink-0 text-lead font-semibold text-ink">{people.length}</p>
+                    <ul className="flex min-w-0 flex-1 flex-wrap gap-1.5">
                       {people.map((c) => (
                         <motion.li key={c.id} layoutId={`pipe-${c.id}`} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
                           <Link to={`/app/customers/${c.id}`} title={c.name} className="block rounded-full focus-visible:outline-offset-1">
-                            <Avatar id={c.id} name={c.name} size={28} />
+                            <Avatar id={c.id} name={c.name} size={32} />
                             <span className="sr-only">{c.name}</span>
                           </Link>
                         </motion.li>
@@ -234,16 +234,16 @@ export function Overview() {
         </section>
 
         {/* Tertiary: campaigns and activity */}
-        <section aria-labelledby="campaigns-title" className="surface p-5 sm:p-6">
+        <section aria-labelledby="campaigns-title" className="px-1 sm:px-2">
           <div className="flex items-baseline justify-between">
-            <h2 id="campaigns-title" className="text-[15px] font-semibold text-ink">
+            <h2 id="campaigns-title" className="type-card">
               Campaigns
             </h2>
-            <Link to="/app/campaigns" className="text-[12.5px] font-medium text-coral-ink hover:underline">
+            <Link to="/app/campaigns" className="text-label font-medium text-coral-ink hover:underline">
               All campaigns
             </Link>
           </div>
-          <ul className="mt-4 flex flex-col gap-4">
+          <ul className="mt-5 flex flex-col gap-6">
             {state.campaigns.map((c) => {
               const rows = state.outbox.filter((m) => m.campaign_id === c.id)
               const eligible = segmentRecipients(state, c).filter((r) => r.check.matches).length
@@ -253,10 +253,10 @@ export function Overview() {
                 <li key={c.id}>
                   <Link to={`/app/campaigns/${c.id}`} className="group block">
                     <div className="flex items-baseline justify-between gap-3">
-                      <p className="truncate text-[14px] font-medium text-ink group-hover:underline">{c.name}</p>
-                      <p className="num shrink-0 text-[12px] text-ink-3">{eligible} in audience</p>
+                      <p className="truncate text-ui font-medium text-ink group-hover:underline">{c.name}</p>
+                      <p className="num shrink-0 text-label text-ink-3">{eligible} in audience</p>
                     </div>
-                    <div className="mt-2 flex h-2 gap-0.5 overflow-hidden rounded-full bg-paper-2">
+                    <div className="mt-2.5 flex h-2 gap-0.5 overflow-hidden rounded-full bg-paper-2">
                       {(["sent", "approved", "draft"] as const).map((s) => (
                         <motion.span
                           key={s}
@@ -266,7 +266,7 @@ export function Overview() {
                         />
                       ))}
                     </div>
-                    <p className="num mt-1.5 text-[12px] text-ink-3">
+                    <p className="num mt-2 text-meta text-ink-3">
                       {n("draft")} draft · {n("approved")} approved · {n("sent")} marked as sent
                     </p>
                   </Link>
@@ -276,22 +276,22 @@ export function Overview() {
           </ul>
         </section>
 
-        <section aria-labelledby="activity-title" className="surface p-5 sm:p-6">
-          <h2 id="activity-title" className="text-[15px] font-semibold text-ink">
-            Activity
+        <section aria-labelledby="activity-title" className="px-1 sm:px-2">
+          <h2 id="activity-title" className="type-card">
+            Recent activity
           </h2>
-          <ol className="mt-3 flex flex-col" data-testid="activity">
+          <ol className="mt-4 flex flex-col gap-1" data-testid="activity">
             {events.map((e) => {
               const Icon = EVENT_ICON[e.type]
               const customer = state.customers.find((c) => c.id === e.customer_id)!
               return (
-                <motion.li key={e.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3 py-2">
-                  <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-paper-2 text-ink-2 ring-1 ring-line">
-                    <Icon className="size-3" aria-hidden />
+                <motion.li key={e.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3.5 py-2.5">
+                  <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-surface text-ink-2 ring-1 ring-line">
+                    <Icon className="size-3.5" aria-hidden />
                   </span>
-                  <p className="min-w-0 flex-1 text-[13px] leading-snug text-ink-2">
+                  <p className="min-w-0 flex-1 text-label leading-snug text-ink-2">
                     <span className="font-medium text-ink">{customer.name}</span> · {e.summary}
-                    <span className="block text-[11.5px] text-ink-3">{relativeTime(e.created_at, state.now)}</span>
+                    <span className="mt-0.5 block text-meta text-ink-3">{relativeTime(e.created_at, state.now)}</span>
                   </p>
                 </motion.li>
               )

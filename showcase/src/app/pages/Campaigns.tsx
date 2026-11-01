@@ -7,7 +7,7 @@ import { PageFade } from "@/app/AppShell"
 import { PageHeader } from "@/app/PageHeader"
 import { DraftView } from "@/components/DraftView"
 import { Modal } from "@/components/Sheet"
-import { Avatar, Badge, Button, Provenance, StageBadge } from "@/components/ui"
+import { Avatar, Badge, Button, Provenance } from "@/components/ui"
 import { channelLimit } from "@/demo/compose"
 import { useDemo } from "@/demo/context"
 import { CSV_COLUMNS, contactFor, csvFilename, exportRows } from "@/demo/csv"
@@ -74,95 +74,89 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
     <PageFade>
       <PageHeader title="Campaigns" meta="Audience, drafts, approval, export. A person signs off every message." />
 
-      <nav aria-label="Campaigns" className="mt-5 flex flex-wrap gap-2">
-        {state.campaigns.map((c) => {
-          const on = c.id === campaign.id
-          return (
-            <Link
-              key={c.id}
-              to={`/app/campaigns/${c.id}`}
-              aria-current={on ? "page" : undefined}
-              className={cx(
-                "flex items-center gap-2.5 rounded-full border px-3.5 py-1.5 text-[13.5px] font-medium transition-colors",
-                on ? "border-ink bg-ink text-paper" : "border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink",
-              )}
-            >
-              <Megaphone className={cx("size-4", on ? "text-coral" : "text-ink-3")} aria-hidden />
-              {c.name}
-              <span className={cx("text-[11.5px] font-normal", on ? "text-paper/60" : "text-ink-3")}>{c.status === "draft" ? "new" : "running"}</span>
-            </Link>
-          )
-        })}
-      </nav>
-
-      <section
-        className="mt-4 flex flex-col gap-4 rounded-[18px] border border-line bg-surface-2 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
-        aria-label="Campaign brief"
-      >
-        <p className="display-sm max-w-3xl text-[19px] leading-snug text-ink sm:text-[21px]">“{campaign.offer_text}”</p>
-        <p className="shrink-0 text-[13px] text-ink-3">
-          {CHANNEL_LABEL[campaign.channel]} · {channelLimit(campaign.channel)} characters max
-        </p>
+      {/* Which campaign, and what it offers. */}
+      <section className="mt-8 lg:mt-10" aria-label="Campaign brief">
+        <nav aria-label="Campaigns" className="flex flex-wrap gap-2">
+          {state.campaigns.map((c) => {
+            const on = c.id === campaign.id
+            return (
+              <Link
+                key={c.id}
+                to={`/app/campaigns/${c.id}`}
+                aria-current={on ? "page" : undefined}
+                className={cx(
+                  "flex h-10 items-center gap-2.5 rounded-full border px-4 text-label font-medium transition-colors",
+                  on ? "border-ink bg-ink text-paper" : "border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink",
+                )}
+              >
+                <Megaphone className={cx("size-4", on ? "text-coral" : "text-ink-3")} aria-hidden />
+                {c.name}
+                <span className={cx("text-meta font-normal", on ? "text-paper/70" : "text-ink-3")}>{c.status === "draft" ? "new" : "running"}</span>
+              </Link>
+            )
+          })}
+        </nav>
+        <div className="mt-6 flex flex-col gap-2 lg:flex-row lg:items-baseline lg:justify-between lg:gap-12">
+          <p className="max-w-3xl text-body text-ink sm:text-lead">“{campaign.offer_text}”</p>
+          <p className="shrink-0 text-label text-ink-3">
+            {CHANNEL_LABEL[campaign.channel]} · {channelLimit(campaign.channel)} characters max
+          </p>
+        </div>
       </section>
 
-      {/* Progress through the workflow */}
-      <ol className="scroll-thin mt-4 flex gap-2 overflow-x-auto pb-1" aria-label="Campaign progress" data-testid="stepper">
+      {/* Progress through the workflow: a quiet line, with the current step in ink. */}
+      <ol className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4" aria-label="Campaign progress" data-testid="stepper">
         {steps.map((s, i) => {
           const isActive = i === active
           return (
-            <li key={s.id} className="min-w-[150px] flex-1" aria-current={isActive ? "step" : undefined}>
-              <a
-                href={`#${s.id === "drafts" || s.id === "approval" ? "review" : s.id}`}
-                className={cx(
-                  "relative flex items-center gap-3 overflow-hidden rounded-[14px] border px-3.5 py-2.5 transition-colors",
-                  isActive ? "border-ink bg-ink text-paper" : s.done ? "border-line bg-surface text-ink" : "border-dashed border-line-strong text-ink-3",
-                )}
-              >
-                <span
-                  className={cx(
-                    "grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-semibold",
-                    isActive ? "bg-coral text-white" : s.done ? "bg-sage text-white" : "bg-paper-2 text-ink-3 ring-1 ring-line",
-                  )}
-                >
-                  {s.done && !isActive ? <Check className="size-3.5" aria-hidden /> : i + 1}
+            <li key={s.id} className="min-w-0" aria-current={isActive ? "step" : undefined}>
+              <a href={`#${s.id === "drafts" || s.id === "approval" ? "review" : s.id}`} className="group block rounded-md">
+                <span className={cx("block h-1 rounded-full transition-colors duration-300", isActive ? "bg-ink" : s.done ? "bg-sage" : "bg-line")} aria-hidden />
+                <span className="mt-3 flex items-center gap-2.5">
+                  <span
+                    className={cx(
+                      "grid size-6 shrink-0 place-items-center rounded-full text-micro font-semibold",
+                      isActive ? "bg-ink text-paper" : s.done ? "bg-sage text-white" : "bg-surface text-ink-3 ring-1 ring-line-strong",
+                    )}
+                  >
+                    {s.done && !isActive ? <Check className="size-3.5" aria-hidden /> : i + 1}
+                  </span>
+                  <span className={cx("truncate text-label font-semibold", isActive || s.done ? "text-ink" : "text-ink-3")}>{s.label}</span>
                 </span>
-                <span className="min-w-0">
-                  <span className="block text-[13.5px] font-semibold">{s.label}</span>
-                  <span className={cx("num block truncate text-[12px]", isActive ? "text-paper/70" : "text-ink-3")}>{s.value}</span>
-                </span>
+                <span className="num mt-0.5 block truncate pl-8.5 text-meta text-ink-3">{s.value}</span>
               </a>
             </li>
           )
         })}
       </ol>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,370px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:gap-8">
         <AudiencePanel campaign={campaign} onPick={(customerId) => setPicked(messages.find((m) => m.customer_id === customerId)?.id ?? null)} />
 
-        <section id="review" className="surface @container flex min-w-0 scroll-mt-4 flex-col" data-testid="outbox" aria-label="Drafts">
-          <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-4 py-3 sm:px-5">
+        <section id="review" className="surface @container flex min-w-0 scroll-mt-6 flex-col" data-testid="outbox" aria-label="Drafts">
+          <header className="flex flex-wrap items-start gap-x-4 gap-y-3 px-5 pt-5 sm:px-6 sm:pt-6">
             <div className="w-full min-w-0 @md:w-auto @md:flex-1">
-              <h2 className="text-[15px] font-semibold text-ink">Drafts</h2>
-              <p className="num text-[12.5px] text-ink-3">
+              <h2 className="type-card">Drafts</h2>
+              <p className="num mt-1 text-label text-ink-3">
                 {counts.draft} draft · {counts.approved} approved · {counts.sent} marked as sent
               </p>
             </div>
+            <Provenance kind="composer" className="@md:mt-1" />
             {messages.length > 0 && undrafted.length > 0 && (
               <Button variant="secondary" size="sm" onClick={generate} data-tour="generate" data-testid="generate-drafts">
                 <Wand2 aria-hidden /> Write {plural(undrafted.length, "more draft")}
               </Button>
             )}
-            <Provenance kind="composer" />
           </header>
 
           {!messages.length ? (
-            <div className="flex flex-col items-center gap-4 px-6 pt-16 pb-14 text-center">
+            <div className="flex flex-col items-center gap-5 px-6 pt-16 pb-16 text-center">
               <span className="flex -space-x-2.5">
                 {matching.slice(0, 7).map((r) => (
-                  <Avatar key={r.customer.id} id={r.customer.id} name={r.customer.name} size={40} className="ring-2 ring-surface" />
+                  <Avatar key={r.customer.id} id={r.customer.id} name={r.customer.name} size={44} className="ring-2 ring-surface" />
                 ))}
               </span>
-              <p className="display-sm text-[24px] leading-tight font-semibold text-ink">
+              <p className="type-title max-w-md text-ink">
                 {matching.length ? `One personal draft for each of ${matching.length} customers` : "No one is in the audience yet"}
               </p>
               <Button variant="primary" size="lg" onClick={generate} disabled={!undrafted.length} data-tour="generate" data-testid="generate-drafts">
@@ -170,9 +164,9 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-4 p-3 sm:p-4">
+            <div className="flex flex-col gap-5 px-4 pt-5 pb-5 sm:px-6">
               <LayoutGroup>
-                <ul className="scroll-thin -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" data-testid="draft-list" aria-label="Drafts in this campaign">
+                <ul className="scroll-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" data-testid="draft-list" aria-label="Drafts in this campaign">
                   {messages.map((m) => {
                     const c = state.customers.find((x) => x.id === m.customer_id)!
                     const on = m.id === selected?.id
@@ -183,14 +177,14 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
                           aria-pressed={on}
                           onClick={() => setPicked(m.id)}
                           className={cx(
-                            "relative flex h-10 items-center gap-2 rounded-full border pr-3 pl-1 text-[13px] font-medium transition-colors",
+                            "relative flex h-11 items-center gap-2.5 rounded-full border pr-4 pl-1.5 text-label font-medium transition-colors",
                             on
                               ? "border-ink bg-surface text-ink shadow-[0_0_0_1px_var(--color-ink)]"
                               : "border-line bg-surface text-ink-2 hover:border-line-strong",
                           )}
                           data-testid={`queue-${c.id}`}
                         >
-                          <Avatar id={c.id} name={c.name} size={30} />
+                          <Avatar id={c.id} name={c.name} size={32} />
                           {c.name.split(" ")[0]}
                           <motion.span layout className={cx("size-2 rounded-full", STATUS_DOT[m.status])} aria-label={m.status} />
                         </button>
@@ -215,7 +209,7 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
               </AnimatePresence>
 
               {messages.length > 1 && (
-                <div className="flex items-center justify-between text-[12.5px] text-ink-3">
+                <div className="flex items-center justify-between text-label text-ink-3">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -241,9 +235,9 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
             </div>
           )}
 
-          <div id="export" className="mt-auto flex scroll-mt-4 flex-col gap-2 border-t border-line bg-surface-2/80 px-4 py-3 sm:px-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="mr-auto text-[13.5px] text-ink">
+          <div id="export" className="mt-auto flex scroll-mt-6 flex-col gap-2 border-t border-line bg-surface-2/80 px-5 py-4 sm:px-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="mr-auto text-ui text-ink">
                 <span className="num font-semibold">{plural(exportable, "approved message")}</span> <span className="text-ink-3">ready to export</span>
               </p>
               <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(true)} disabled={!exportable} data-testid="preview-csv">
@@ -259,15 +253,15 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center gap-1.5 text-[12.5px] text-sage"
+                  className="flex items-center gap-1.5 text-label text-sage"
                   role="status"
                   data-testid="export-status"
                 >
-                  <Check className="size-4" aria-hidden />
+                  <Check className="size-4 shrink-0" aria-hidden />
                   Downloaded {lastExport.name} · {plural(lastExport.count, "message")}. Send them with your own tool, then mark them as sent.
                 </motion.p>
               ) : (
-                <p className="text-[12px] text-ink-3">Reklamaton does not send messages. The CSV goes to your own email or messaging tool.</p>
+                <p className="text-meta text-ink-3">Reklamaton does not send messages. The CSV goes to your own email or messaging tool.</p>
               )}
             </AnimatePresence>
           </div>
@@ -292,13 +286,13 @@ function CsvPreview({ campaignId, onDownload }: { campaignId: number; onDownload
   const { state } = useDemo()
   const rows = exportRows(state, campaignId)
   return (
-    <div className="flex flex-col gap-3">
-      <div className="scroll-thin max-h-[52vh] overflow-auto rounded-[10px] border border-line">
-        <table className="w-full min-w-[720px] text-left text-[12px]">
-          <thead className="sticky top-0 bg-surface-2 font-mono text-[11px] text-ink-3">
+    <div className="flex flex-col gap-4">
+      <div className="scroll-thin max-h-[52vh] overflow-auto rounded-[12px] border border-line">
+        <table className="w-full min-w-[760px] text-left text-meta">
+          <thead className="sticky top-0 bg-surface-2 font-mono text-micro text-ink-3">
             <tr>
               {CSV_COLUMNS.filter((c) => c !== "campaign_id" && c !== "status").map((c) => (
-                <th key={c} scope="col" className="border-b border-line px-2.5 py-2 font-medium">
+                <th key={c} scope="col" className="border-b border-line px-3 py-2.5 font-medium">
                   {c}
                 </th>
               ))}
@@ -309,20 +303,20 @@ function CsvPreview({ campaignId, onDownload }: { campaignId: number; onDownload
               const customer = state.customers.find((c) => c.id === m.customer_id)!
               return (
                 <tr key={m.id}>
-                  <td className="num px-2.5 py-2 text-ink-3">{m.id}</td>
-                  <td className="num px-2.5 py-2 text-ink-3">{m.customer_id}</td>
-                  <td className="px-2.5 py-2 font-medium whitespace-nowrap text-ink">{customer.name}</td>
-                  <td className="px-2.5 py-2 text-ink-2">{contactFor(state, m.customer_id, m.channel)}</td>
-                  <td className="px-2.5 py-2 text-ink-2">{m.channel}</td>
-                  <td className="min-w-[300px] px-2.5 py-2 whitespace-pre-wrap text-ink">{m.content}</td>
-                  <td className="num px-2.5 py-2 whitespace-nowrap text-ink-3">{m.approved_at?.replace("T", " ").slice(0, 16)}</td>
+                  <td className="num px-3 py-2.5 text-ink-3">{m.id}</td>
+                  <td className="num px-3 py-2.5 text-ink-3">{m.customer_id}</td>
+                  <td className="px-3 py-2.5 font-medium whitespace-nowrap text-ink">{customer.name}</td>
+                  <td className="px-3 py-2.5 text-ink-2">{contactFor(state, m.customer_id, m.channel)}</td>
+                  <td className="px-3 py-2.5 text-ink-2">{m.channel}</td>
+                  <td className="min-w-[300px] px-3 py-2.5 whitespace-pre-wrap text-ink">{m.content}</td>
+                  <td className="num px-3 py-2.5 whitespace-nowrap text-ink-3">{m.approved_at?.replace("T", " ").slice(0, 16)}</td>
                 </tr>
               )
             })}
           </tbody>
         </table>
       </div>
-      <p className="text-[12px] text-ink-3">
+      <p className="text-meta text-ink-3">
         The file also has <code className="font-mono">campaign_id</code> and <code className="font-mono">status</code> columns. It is UTF-8 with a byte-order
         mark for spreadsheet apps, and cells that would run as formulas are prefixed with a quote.
       </p>
@@ -337,6 +331,7 @@ function CsvPreview({ campaignId, onDownload }: { campaignId: number; onDownload
 
 function AudiencePanel({ campaign, onPick }: { campaign: Campaign; onPick: (customerId: number) => void }) {
   const { state, dispatch } = useDemo()
+  const [showRules, setShowRules] = useState(false)
   const [showJson, setShowJson] = useState(false)
   const [showExcluded, setShowExcluded] = useState(false)
   const recipients = segmentRecipients(state, campaign)
@@ -350,120 +345,53 @@ function AudiencePanel({ campaign, onPick }: { campaign: Campaign; onPick: (cust
   const funnel = audienceFunnel(state, seg)
   const total = state.customers.length
   const drafted = (id: number) => state.outbox.find((m) => m.campaign_id === campaign.id && m.customer_id === id)
+  const chip = (on: boolean, tone: "ink" | "indigo") =>
+    cx(
+      "inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-label font-medium transition-colors duration-150",
+      on ? (tone === "ink" ? "border-ink bg-ink text-paper" : "border-indigo bg-indigo text-white") : "border-line bg-surface text-ink-2 hover:border-line-strong",
+    )
 
   return (
-    <section id="audience" className="surface flex min-w-0 scroll-mt-4 flex-col" data-tour="segment" data-testid="segment" aria-label="Audience">
-      <header className="border-b border-line px-4 py-3 sm:px-5">
-        <h2 className="text-[15px] font-semibold text-ink">Audience</h2>
-        <p className="text-[12.5px] text-ink-3">Same rules as the backend&apos;s segment_json</p>
+    <section id="audience" className="surface flex min-w-0 scroll-mt-6 flex-col self-start" data-tour="segment" data-testid="segment" aria-label="Audience">
+      <header className="px-5 pt-5 sm:px-6 sm:pt-6">
+        <h2 className="type-card">Audience</h2>
+        <p className="mt-1 text-label text-ink-3">Same rules as the backend&apos;s segment_json</p>
       </header>
 
-      <div className="flex flex-col gap-5 p-4 sm:p-5">
-        {/* Each condition narrows the audience; the bars move as the profile data changes. */}
-        <ol className="flex flex-col gap-1.5" aria-label="Audience funnel" data-testid="funnel">
+      <div className="flex flex-col gap-6 px-5 pt-5 pb-6 sm:px-6">
+        {/* Each rule narrows the audience; the bars move as the profile data changes. */}
+        <ol className="flex flex-col gap-2" aria-label="Audience funnel" data-testid="funnel">
           {funnel.map((step, i) => (
             <li key={step.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3">
-              <div className="relative h-7 overflow-hidden rounded-[8px] bg-paper-2">
+              <div className="relative h-8 overflow-hidden rounded-[9px] bg-paper-2">
                 <motion.div
-                  className={cx("absolute inset-y-0 left-0 rounded-[8px]", i === funnel.length - 1 ? "bg-fact-intent" : "bg-line-strong/60")}
+                  className={cx("absolute inset-y-0 left-0 rounded-[9px]", i === funnel.length - 1 ? "bg-fact-intent" : "bg-line-strong/55")}
                   initial={false}
                   animate={{ width: `${Math.max(4, (step.ids.length / total) * 100)}%` }}
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <span
                   className={cx(
-                    "relative flex h-full items-center truncate px-2.5 text-[12px] font-medium",
+                    "relative flex h-full items-center truncate px-3 text-meta font-medium",
                     i === funnel.length - 1 ? "text-ink" : "text-ink-2",
                   )}
                 >
                   {step.label}
                 </span>
               </div>
-              <span className={cx("num w-6 text-right text-[14px] font-semibold", i === funnel.length - 1 ? "text-ink" : "text-ink-3")}>{step.ids.length}</span>
+              <span className={cx("num w-7 text-right text-ui font-semibold", i === funnel.length - 1 ? "text-ink" : "text-ink-3")}>{step.ids.length}</span>
             </li>
           ))}
         </ol>
 
-        <div className="flex items-center justify-between gap-3 rounded-[10px] border border-line bg-surface-2 px-3 py-2">
-          <span className="inline-flex items-center gap-2 text-[13px] font-medium text-ink">
-            <Lock className="size-3.5 text-ink-3" aria-hidden /> Marketing consent
-          </span>
-          <span className="text-[12.5px] text-sage">Required, always</span>
-        </div>
-
-        <fieldset>
-          <legend className="mb-2 text-[11.5px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Lead stage is any of</legend>
-          <div className="flex flex-wrap gap-1.5">
-            {LEAD_STAGES.map((s) => {
-              const on = seg.lead_stage_in.includes(s)
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => update({ lead_stage_in: toggle(seg.lead_stage_in, s) })}
-                  className={cx(
-                    "inline-flex h-8 items-center gap-1 rounded-full border px-3 text-[12.5px] font-medium transition-colors duration-150",
-                    on ? "border-ink bg-ink text-paper" : "border-line bg-surface text-ink-2 hover:border-line-strong",
-                  )}
-                  data-testid={`seg-stage-${s}`}
-                >
-                  {on && <Check className="size-3.5" aria-hidden />}
-                  {STAGE_META[s].label}
-                </button>
-              )
-            })}
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend className="mb-2 text-[11.5px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Interested in any of</legend>
-          <div className="flex flex-wrap gap-1.5">
-            {interests.map((i) => {
-              const on = seg.interests_any.includes(i)
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => update({ interests_any: toggle(seg.interests_any, i) })}
-                  className={cx(
-                    "inline-flex h-8 items-center gap-1 rounded-full border px-3 text-[12.5px] font-medium transition-colors duration-150",
-                    on ? "border-indigo bg-indigo text-white" : "border-line bg-surface text-ink-2 hover:border-line-strong",
-                  )}
-                  data-testid={`seg-interest-${i.replace(/\s+/g, "-")}`}
-                >
-                  {on && <Check className="size-3.5" aria-hidden />}
-                  {i}
-                </button>
-              )
-            })}
-          </div>
-        </fieldset>
-
-        <label className="flex items-center justify-between gap-3 text-[13px]">
-          <span className="text-[11.5px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Last seen more than</span>
-          <select
-            value={seg.last_seen_older_than_days ?? ""}
-            onChange={(e) => update({ last_seen_older_than_days: e.target.value ? Number(e.target.value) : null })}
-            className="h-9 rounded-[10px] border border-line-strong bg-surface px-2.5 text-[13px] text-ink"
-            data-testid="seg-last-seen"
-          >
-            <option value="">any time ago</option>
-            <option value="7">7 days ago</option>
-            <option value="14">14 days ago</option>
-            <option value="30">30 days ago</option>
-          </select>
-        </label>
-
         <div aria-live="polite">
-          <p className="flex items-baseline justify-between text-[13px]">
+          <p className="flex items-baseline justify-between text-label">
             <span className="font-semibold text-ink">
               <span className="num">{matching.length}</span> in the audience
             </span>
             <span className="num text-ink-3">{excluded.length} excluded</span>
           </p>
-          <ul className="mt-2 flex flex-col divide-y divide-line rounded-[12px] border border-line bg-surface" data-testid="recipients">
+          <ul className="mt-3 flex flex-col divide-y divide-line rounded-[12px] border border-line bg-surface" data-testid="recipients">
             <AnimatePresence initial={false}>
               {matching.map(({ customer, profile }) => {
                 const m = drafted(customer.id)
@@ -480,21 +408,21 @@ function AudiencePanel({ campaign, onPick }: { campaign: Campaign; onPick: (cust
                       type="button"
                       onClick={() => m && onPick(customer.id)}
                       disabled={!m}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-left enabled:hover:bg-surface-2"
+                      className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left enabled:hover:bg-surface-2"
                     >
-                      <Avatar id={customer.id} name={customer.name} size={26} />
-                      <span className="min-w-0 flex-1 truncate text-[13px] text-ink">{customer.name}</span>
+                      <Avatar id={customer.id} name={customer.name} size={30} />
+                      <span className="min-w-0 flex-1 truncate text-label text-ink">{customer.name}</span>
+                      <span className="sr-only">{STAGE_META[profile.lead_stage].label}</span>
                       {recent === customer.id && <Badge tone="coral">from chat</Badge>}
-                      <StageBadge stage={profile.lead_stage} />
-                      {m && <span className={cx("size-2 rounded-full", STATUS_DOT[m.status])} aria-label={`${m.status}`} />}
+                      {m && <span className={cx("size-2 shrink-0 rounded-full", STATUS_DOT[m.status])} aria-label={`${m.status}`} />}
                     </button>
                   </motion.li>
                 )
               })}
             </AnimatePresence>
             {!matching.length && (
-              <li className="px-3 py-4 text-center text-[12.5px] text-ink-3">
-                <Users className="mx-auto mb-1 size-4" aria-hidden /> No customer matches every condition.
+              <li className="px-4 py-5 text-center text-label text-ink-3">
+                <Users className="mx-auto mb-1.5 size-4" aria-hidden /> No customer matches every condition.
               </li>
             )}
           </ul>
@@ -502,40 +430,131 @@ function AudiencePanel({ campaign, onPick }: { campaign: Campaign; onPick: (cust
             type="button"
             aria-expanded={showExcluded}
             onClick={() => setShowExcluded((v) => !v)}
-            className="mt-2 inline-flex items-center gap-1 text-[12.5px] font-medium text-ink-2 hover:text-ink"
+            className="mt-3 inline-flex items-center gap-1.5 text-label font-medium text-ink-2 hover:text-ink"
             data-testid="toggle-excluded"
           >
             <ChevronDown className={cx("size-4 transition-transform", showExcluded && "rotate-180")} aria-hidden />
             {showExcluded ? "Hide" : "Show"} who is excluded and why
           </button>
           {showExcluded && (
-            <ul className="mt-2 flex flex-col gap-1.5" data-testid="excluded">
+            <ul className="mt-3 flex flex-col gap-2" data-testid="excluded">
               {excluded.map(({ customer, check }) => (
-                <li key={customer.id} className="flex items-start justify-between gap-3 text-[12.5px]">
+                <li key={customer.id} className="flex items-start justify-between gap-4 text-label">
                   <span className="text-ink-2">{customer.name}</span>
-                  <span className="text-right text-ink-3">{check.reasons.join(" · ")}</span>
+                  <span className="text-right text-meta text-ink-3">{check.reasons.join(" · ")}</span>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        <div className="rounded-[10px] border border-line">
+        {/* The rules themselves, one click away: consent is fixed, the rest can be changed. */}
+        <div className="rounded-[14px] border border-line">
           <button
             type="button"
-            aria-expanded={showJson}
-            onClick={() => setShowJson((v) => !v)}
-            className="flex w-full items-center justify-between px-3 py-2 text-[12.5px] font-medium text-ink-2 hover:text-ink"
+            aria-expanded={showRules}
+            aria-controls={`rules-${campaign.id}`}
+            onClick={() => setShowRules((v) => !v)}
+            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+            data-testid="toggle-rules"
           >
-            <span>
-              Stored as <code className="font-mono">segment_json</code>
+            <span className="min-w-0">
+              <span className="block text-label font-semibold text-ink">Audience rules</span>
+              <span className="mt-0.5 block text-meta text-ink-3">
+                Consent · {seg.lead_stage_in.length ? seg.lead_stage_in.map((x) => STAGE_META[x].label.toLowerCase()).join(" or ") : "any stage"}
+                {seg.interests_any.length ? ` · ${seg.interests_any.join(" or ")}` : ""}
+                {seg.last_seen_older_than_days ? ` · seen over ${seg.last_seen_older_than_days} days ago` : ""}
+              </span>
             </span>
-            <ChevronDown className={cx("size-4 transition-transform", showJson && "rotate-180")} aria-hidden />
+            <ChevronDown className={cx("size-4 shrink-0 text-ink-2 transition-transform", showRules && "rotate-180")} aria-hidden />
           </button>
-          {showJson && (
-            <pre className="m-2 mt-0 overflow-x-auto rounded-md bg-ink p-3 font-mono text-[11.5px] leading-relaxed text-paper" data-testid="segment-json">
-              {segmentJson(seg)}
-            </pre>
+          {showRules && (
+            <div id={`rules-${campaign.id}`} className="flex flex-col gap-6 border-t border-line px-4 pt-4 pb-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-2 text-label font-medium text-ink">
+                  <Lock className="size-4 text-ink-3" aria-hidden /> Marketing consent
+                </span>
+                <span className="text-label text-sage">Required, always</span>
+              </div>
+
+              <fieldset>
+                <legend className="type-label mb-2.5">Lead stage is any of</legend>
+                <div className="flex flex-wrap gap-2">
+                  {LEAD_STAGES.map((s) => {
+                    const on = seg.lead_stage_in.includes(s)
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => update({ lead_stage_in: toggle(seg.lead_stage_in, s) })}
+                        className={chip(on, "ink")}
+                        data-testid={`seg-stage-${s}`}
+                      >
+                        {on && <Check className="size-3.5" aria-hidden />}
+                        {STAGE_META[s].label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend className="type-label mb-2.5">Interested in any of</legend>
+                <div className="flex flex-wrap gap-2">
+                  {interests.map((i) => {
+                    const on = seg.interests_any.includes(i)
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => update({ interests_any: toggle(seg.interests_any, i) })}
+                        className={chip(on, "indigo")}
+                        data-testid={`seg-interest-${i.replace(/\s+/g, "-")}`}
+                      >
+                        {on && <Check className="size-3.5" aria-hidden />}
+                        {i}
+                      </button>
+                    )
+                  })}
+                </div>
+              </fieldset>
+
+              <label className="flex flex-wrap items-center justify-between gap-3">
+                <span className="type-label">Last seen more than</span>
+                <select
+                  value={seg.last_seen_older_than_days ?? ""}
+                  onChange={(e) => update({ last_seen_older_than_days: e.target.value ? Number(e.target.value) : null })}
+                  className="h-10 rounded-[10px] border border-line-strong bg-surface px-3 text-label text-ink"
+                  data-testid="seg-last-seen"
+                >
+                  <option value="">any time ago</option>
+                  <option value="7">7 days ago</option>
+                  <option value="14">14 days ago</option>
+                  <option value="30">30 days ago</option>
+                </select>
+              </label>
+
+              <div>
+                <button
+                  type="button"
+                  aria-expanded={showJson}
+                  onClick={() => setShowJson((v) => !v)}
+                  className="inline-flex items-center gap-1.5 text-label font-medium text-ink-2 hover:text-ink"
+                >
+                  <ChevronDown className={cx("size-4 transition-transform", showJson && "rotate-180")} aria-hidden />
+                  <span>
+                    Stored as <code className="font-mono">segment_json</code>
+                  </span>
+                </button>
+                {showJson && (
+                  <pre className="mt-3 overflow-x-auto rounded-[10px] bg-ink p-3.5 font-mono text-meta leading-relaxed text-paper" data-testid="segment-json">
+                    {segmentJson(seg)}
+                  </pre>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
