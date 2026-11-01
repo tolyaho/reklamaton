@@ -58,7 +58,14 @@ test("segment controls filter on real profile fields and show the backend JSON",
   await page.goto("/app/campaigns/1")
   const recipients = page.getByTestId("recipients")
   await expect(recipients.locator("li")).toHaveCount(5)
+  // The rules sit behind one labelled toggle; its summary states them without opening it.
+  const rules = page.getByTestId("toggle-rules")
+  await expect(rules).toHaveAttribute("aria-expanded", "false")
+  await expect(rules).toContainText("qualified or proposal · packaging or labels")
+  await expect(page.getByTestId("seg-stage-qualified")).toHaveCount(0)
+  await rules.click()
   await page.getByTestId("seg-stage-qualified").click() // now: proposal only
+  await expect(rules).toContainText("Consent · proposal · packaging or labels")
   await expect(recipients.locator("li")).toHaveCount(1)
   await expect(recipients).toContainText("Theo Marchetti")
   await page.getByTestId("seg-stage-qualified").click()

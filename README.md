@@ -8,7 +8,7 @@ Reklamaton is an AI sales workspace. An AI persona chats with a business's custo
 
 <p align="center"><a href="https://reklamaton-demo.vercel.app/media/reklamaton-walkthrough.mp4"><img src="docs/assets/walkthrough-poster.webp" width="100%" alt="The Reklamaton landing page: a product window replays Ines's chat, with her interests, budget and buying signals marked in her words and her customer memory filling in beside it"></a></p>
 
-<p align="center"><b><a href="https://reklamaton-demo.vercel.app">Open the live demo</a></b> · <a href="https://reklamaton-demo.vercel.app/media/reklamaton-walkthrough.mp4">▶ Watch the 52-second walkthrough</a> · <a href="docs/demo.md">What the demo is</a> · <a href="docs/architecture.md">Architecture</a></p>
+<p align="center"><b><a href="https://reklamaton-demo.vercel.app">Open the live demo</a></b> · <a href="https://reklamaton-demo.vercel.app/media/reklamaton-walkthrough.mp4">▶ Watch the 54-second walkthrough</a> · <a href="docs/demo.md">What the demo is</a> · <a href="docs/architecture.md">Architecture</a></p>
 
 The live demo is a static site with a fictional studio and synthetic customers. You don't need to sign up or bring an API key. It makes no model calls and sends nothing. The FastAPI backend that does the real work is in this repository and runs locally.
 
@@ -122,10 +122,10 @@ The `Dockerfile` starts both dev servers in one container. It is a local conveni
 | --- | --- | --- |
 | Backend | `cd reklamaton && pytest` | 32 passed, 2 expected failures. The expected failures record the missing authentication (see below). |
 | Showcase unit | `cd showcase && npm test` | 24 passed |
-| Showcase browser | `cd showcase && npm run test:e2e` | 24 passed (Playwright, production build, production CSP) |
+| Showcase browser | `cd showcase && npm run test:e2e` | 30 passed (Playwright, production build, production CSP) |
 
 - **No live model calls in tests or CI.** Model calls go to in-process fakes, so the tests check the requests the code builds and how it handles replies. They do not measure model quality.
-- **Browser test failure conditions.** The browser tests fail on any console error, any request to another host, or horizontal overflow at 390 to 1920 px.
+- **Browser test failure conditions.** The browser tests fail on any console error, any request to another host, horizontal overflow at 390 to 1920 px, or visible text smaller than 12 px.
 - **CI** also lints both frontends, builds them and runs a gitleaks scan.
 
 Details: [docs/evaluation-and-limitations.md](docs/evaluation-and-limitations.md).

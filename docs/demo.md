@@ -31,6 +31,13 @@ A customer fact keeps one colour from the words she wrote, to the profile field 
 
 The marks in a message are the scripted evidence for that turn's patch. The marks in a draft are the sentences the composer wrote from each field.
 
+### Type and layout
+
+- **Two typefaces.** Inter is used for everything inside the product, including page titles, messages, tables and controls. Fraunces is kept for the landing page's headlines.
+- **One scale.** Reading text is 16 px, product content 15 px, labels 14 px and metadata 13 px. Timestamps and counters are 12 px, and a browser test fails on any visible text below that.
+- **One focal point per screen.** Overview leads with *Up next*. Conversations gives the dialogue the width, with the inbox column only on wide screens. Campaigns puts the selected draft and its approval first.
+- **Details one step away.** On Campaigns, the funnel always shows the audience rules; the controls that change them sit under **Audience rules**. A draft lists the profile fields it used by name; pointing at one, or focusing it with the keyboard, says how it shaped the draft and marks the sentence it wrote. On the landing page, the six business rules sit under one expandable row.
+
 ## The scenario
 
 **Studio Halden** is a fictional brand and packaging studio for food and drink makers, with prices in euros and the Lisbon timezone. Its catalog has six products, from a free packaging audit to a €6,500 website kit. The persona, **Mira**, answers from that catalog.
@@ -126,7 +133,7 @@ The tour has 10 steps. It moves through the real screens and uses the real demo 
 
 ## Video
 
-The README video (about 52 seconds, 1920×1080, 30 fps, H.264) was recorded by `showcase/scripts/record-demo.mjs`:
+The README video (about 54 seconds, 1920×1080, 30 fps, H.264) was recorded by `showcase/scripts/record-demo.mjs`:
 1. Playwright drives the production build.
 2. The Chrome DevTools screencast captures every frame with its timestamp.
 3. FFmpeg resamples the frames to a constant 30 fps.

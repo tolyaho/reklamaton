@@ -36,7 +36,8 @@ npm run test:e2e     # Playwright against the production build
 The browser tests fail on:
 - any console error;
 - any request that leaves the local server, which also means no backend and no OpenAI;
-- horizontal overflow at 390, 768, 1024, 1280, 1440 and 1920 px.
+- horizontal overflow at 390, 768, 1024, 1280, 1440 and 1920 px;
+- visible text smaller than 12 px.
 
 ## Layout
 

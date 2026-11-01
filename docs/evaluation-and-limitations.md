@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Backend, offline | `cd reklamaton && pytest` | 32 tests, plus 2 expected failures (below). |
 | Showcase unit tests | `cd showcase && npm test` | 24 Vitest tests on the demo state. |
-| Showcase browser tests | `cd showcase && npm run test:e2e` | 24 Playwright tests against the production build, under the production Content-Security-Policy. |
+| Showcase browser tests | `cd showcase && npm run test:e2e` | 30 Playwright tests against the production build, under the production Content-Security-Policy. |
 | Original frontend | `cd my-app && npm run lint && npm run build` | ESLint and the TypeScript build. |
 
 **Backend tests** cover:
@@ -35,13 +35,14 @@
 - the landing page: the disclosure and About this demo, the hero replay (and that it leaves your workspace untouched), the three acts on the real workspace through to approval and CSV export, and the 24-hour rule there;
 - a chat turn updating the profile, with evidence;
 - propagation to the CRM table and segments;
-- the segment controls and `segment_json`;
+- the segment controls behind the *Audience rules* toggle, its summary, and `segment_json`;
 - consent;
 - drafts, the rate-limit refusal, the CSV download and its contents, and mark-as-sent;
 - reset and persistence, deep links and the 404 page;
 - the full guided tour, and skipping it or closing it with Escape;
 - keyboard-only use, and reduced motion in the workspace and on the landing page (nothing plays by itself);
-- no horizontal overflow at 390, 768, 1024, 1280×640, 1440 and 1920 px;
+- no horizontal overflow at 390, 768, 1024, 1280×640, 1440 and 1920 px, and the customer table fitting its frame at 1024, 1280 and 1440 px;
+- readability: no visible text below 12 px on any page, Inter for the product's headings, and a draft's profile fields explaining themselves on hover or keyboard focus;
 - mobile navigation.
 
 Every browser test also fails on a console error or on any request to another host.
