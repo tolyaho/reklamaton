@@ -130,7 +130,7 @@ function CampaignView({ campaign }: { campaign: Campaign }) {
         })}
       </ol>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:gap-8">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)] xl:gap-8 2xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
         <AudiencePanel campaign={campaign} onPick={(customerId) => setPicked(messages.find((m) => m.customer_id === customerId)?.id ?? null)} />
 
         <section id="review" className="surface @container flex min-w-0 scroll-mt-6 flex-col" data-testid="outbox" aria-label="Drafts">

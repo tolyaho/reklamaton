@@ -235,11 +235,11 @@ export function Memory({ customerId, onSource, activeField, variant = "panel", a
 
 export function Consent({ optedIn, className }: { optedIn: boolean; className?: string }) {
   return optedIn ? (
-    <span className={cx("inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-sage-soft px-2.5 text-meta font-medium text-sage", className)}>
+    <span className={cx("inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-sage-soft px-2.5 text-meta font-medium whitespace-nowrap text-sage", className)}>
       <ShieldCheck className="size-3.5" aria-hidden /> Opted in
     </span>
   ) : (
-    <span className={cx("inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-rose-soft px-2.5 text-meta font-medium text-rose", className)}>
+    <span className={cx("inline-flex h-6 shrink-0 items-center gap-1 rounded-full bg-rose-soft px-2.5 text-meta font-medium whitespace-nowrap text-rose", className)}>
       <ShieldOff className="size-3.5" aria-hidden /> No consent
     </span>
   )

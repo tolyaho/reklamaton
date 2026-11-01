@@ -183,16 +183,16 @@ export function Customers() {
               <th scope="col" className="px-5 py-3 font-medium">
                 Customer
               </th>
-              <th scope="col" className="w-[150px] px-4 py-3 font-medium">
+              <th scope="col" className="w-[140px] px-4 py-3 font-medium">
                 Stage
               </th>
               <th scope="col" className="hidden w-[170px] px-4 py-3 font-medium xl:table-cell">
                 Interests
               </th>
-              <th scope="col" className="w-[140px] px-4 py-3 font-medium">
+              <th scope="col" className="w-[160px] px-4 py-3 font-medium">
                 Budget
               </th>
-              <th scope="col" className="w-[244px] px-4 py-3 font-medium">
+              <th scope="col" className="w-[236px] px-4 py-3 font-medium">
                 Next step
               </th>
               <th scope="col" className="hidden w-[130px] px-5 py-3 font-medium 2xl:table-cell">
@@ -262,7 +262,7 @@ export function Customers() {
                         {!p.interests.length && <span className="text-ink-3">—</span>}
                       </div>
                     </td>
-                    <td className="num truncate px-4 py-4 whitespace-nowrap text-ink-2">
+                    <td className="num px-4 py-4 whitespace-nowrap text-ink-2">
                       {p.budget_max == null && p.budget_min == null ? <span className="text-ink-3">—</span> : formatBudget(p.budget_min, p.budget_max)}
                     </td>
                     <td className="px-4 py-4">
@@ -342,8 +342,8 @@ function CustomerDetail({ customer }: { customer: Customer }) {
     <div className="flex flex-col pb-8">
       {/* Summary first: who, how far, how much, and whether we may write to them. */}
       <div className="flex items-center gap-5 border-b border-line bg-surface-2 px-6 py-5">
-        <Avatar id={customer.id} name={customer.name} size={52} />
-        <div className="grid min-w-0 flex-1 grid-cols-3 gap-4">
+        <Avatar id={customer.id} name={customer.name} size={52} className="max-sm:hidden" />
+        <div className="grid min-w-0 flex-1 grid-cols-3 gap-3 sm:gap-4">
           <div>
             <p className="type-meta">Stage</p>
             <p className="mt-1 text-ui font-semibold text-ink">{STAGE_META[p.lead_stage].label}</p>
