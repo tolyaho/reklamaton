@@ -26,7 +26,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "workspace",
     route: "/app/overview",
-    target: "kpis",
+    target: "workspace",
     title: "A fictional studio's workspace",
     body: "Studio Halden sells brand and packaging design. Its customers, chats and campaigns are synthetic, and every number on this page is counted from them.",
   },
@@ -87,7 +87,7 @@ export const TOUR_STEPS: TourStep[] = [
     route: "/app/campaigns/1",
     target: "draft-ines",
     title: "Personalized from her profile",
-    body: "The chips show which profile field shaped which sentence: her pastry boxes, the €3,900 system that fits her budget, the timeline objection, and her proposal stage.",
+    body: "Each coloured sentence came from one field of her profile: her pastry boxes, the €3,900 system that fits her budget, the timeline objection, and her proposal stage.",
   },
   {
     id: "approve",

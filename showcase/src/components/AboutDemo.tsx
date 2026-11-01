@@ -11,7 +11,7 @@ const ROWS: { kind: ProvenanceKind; label?: string; title: string; body: string 
   {
     kind: "scripted",
     title: "Scripted conversation",
-    body: "Ines's four turns, the persona's replies and the profile patch after each turn are written for the demo. They are not model output.",
+    body: "Ines's four turns, the persona's replies and the profile patch after each turn are written for the demo. They are not model output. The replay on the landing page plays the same script.",
   },
   {
     kind: "composer",
@@ -34,8 +34,8 @@ const ROWS: { kind: ProvenanceKind; label?: string; title: string; body: string 
 
 export function AboutDemo() {
   return (
-    <div className="flex flex-col gap-4 text-[13.5px] leading-relaxed text-ink-2">
-      <ul className="flex flex-col gap-3">
+    <div className="flex flex-col gap-6 text-ui leading-relaxed text-ink-2">
+      <ul className="flex flex-col gap-4">
         {ROWS.map((r) => (
           <li key={r.title} className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -46,15 +46,15 @@ export function AboutDemo() {
           </li>
         ))}
       </ul>
-      <div className="rounded-ctl border border-line bg-surface-2 p-3">
+      <div className="rounded-ctl border border-line bg-surface-2 p-4">
         <p className="font-semibold text-ink">Not in Reklamaton at all</p>
-        <ul className="mt-1 list-disc pl-5">
+        <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-5">
           <li>Sending. There is no SMS, WhatsApp, Telegram or email integration; “Mark as sent” only records that you sent it elsewhere.</li>
           <li>Authentication. The FastAPI backend trusts the user id it is given, so it is meant to run locally, not on the public internet.</li>
           <li>Measured results. The demo shows counts from its own synthetic data, not customers, conversions or time saved.</li>
         </ul>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-label">
         {[
           ["store.py", "reklamaton/store.py"],
           ["profile_extractor.py", "reklamaton/profile_extractor.py"],

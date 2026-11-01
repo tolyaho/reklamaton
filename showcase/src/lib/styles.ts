@@ -13,16 +13,16 @@ const VARIANTS: Record<ButtonVariant, string> = {
   success: "bg-sage text-white hover:bg-[#2c5940]",
 }
 const SIZES: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-[13px] gap-1.5",
-  md: "h-10 px-4 text-sm gap-2",
-  lg: "h-12 px-5 text-[15px] gap-2",
+  sm: "h-9 px-3.5 text-label gap-1.5",
+  md: "h-11 px-4.5 text-ui gap-2",
+  lg: "h-12 px-5.5 text-body gap-2",
 }
 
 export function buttonClass(variant: ButtonVariant = "secondary", size: ButtonSize = "md", extra?: string) {
   return cx(
     "inline-flex items-center justify-center rounded-ctl font-medium whitespace-nowrap select-none",
     "transition-[background-color,border-color,box-shadow,transform,color] duration-150 ease-soft",
-    "active:translate-y-px active:scale-[0.985] disabled:pointer-events-none disabled:opacity-45",
+    "active:translate-y-px active:scale-[0.985] disabled:pointer-events-none disabled:opacity-55",
     "[&_svg]:size-4 [&_svg]:shrink-0",
     VARIANTS[variant],
     SIZES[size],

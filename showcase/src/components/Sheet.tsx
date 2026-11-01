@@ -53,11 +53,11 @@ export function Sheet({
                 exit={{ opacity: 0, x: side === "right" ? 24 : -24 }}
                 transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+                <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
                   <div className="min-w-0">
-                    <Dialog.Title className="font-display text-[20px] font-semibold leading-tight text-ink">{title}</Dialog.Title>
+                    <Dialog.Title className="text-[20px] leading-tight font-semibold tracking-[-0.015em] text-ink">{title}</Dialog.Title>
                     {description ? (
-                      <Dialog.Description className="mt-0.5 text-[13px] text-ink-3">{description}</Dialog.Description>
+                      <Dialog.Description className="mt-1.5 max-w-prose text-label text-ink-3">{description}</Dialog.Description>
                     ) : (
                       <Dialog.Description className="sr-only">Details</Dialog.Description>
                     )}
@@ -121,11 +121,11 @@ export function Modal({
                   exit={{ opacity: 0, y: 8, scale: 0.98 }}
                   transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="flex items-start justify-between gap-3 px-6 pt-5">
-                    <div>
-                      <Dialog.Title className="font-display text-[22px] font-semibold leading-tight text-ink">{title}</Dialog.Title>
+                  <div className="flex items-start justify-between gap-4 px-6 pt-6 sm:px-7">
+                    <div className="min-w-0">
+                      <Dialog.Title className="text-[21px] leading-tight font-semibold tracking-[-0.015em] text-ink">{title}</Dialog.Title>
                       {description ? (
-                        <Dialog.Description className="mt-1 text-[13.5px] text-ink-3">{description}</Dialog.Description>
+                        <Dialog.Description className="mt-1.5 max-w-prose text-ui text-ink-3">{description}</Dialog.Description>
                       ) : (
                         <Dialog.Description className="sr-only">Dialog</Dialog.Description>
                       )}
@@ -137,7 +137,7 @@ export function Modal({
                       <X className="size-4" />
                     </Dialog.Close>
                   </div>
-                  <div className="px-6 pt-4 pb-6">{children}</div>
+                  <div className="px-6 pt-5 pb-7 sm:px-7">{children}</div>
                 </motion.div>
               </Dialog.Content>
             </div>

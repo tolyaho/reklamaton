@@ -16,6 +16,28 @@ The demo is at `showcase/`. It is a static site: it opens without sign-up, needs
 
 No recorded model output appears anywhere in the demo. All persona replies are scripted. None of the text was produced by OpenAI.
 
+Every page carries a short disclosure, **Interactive demo · Synthetic data · No live AI calls**, which opens *About this demo* with the details.
+
+### Colours
+
+A customer fact keeps one colour from the words she wrote, to the profile field it filled, to the draft sentence it produced:
+
+| Colour | Kind of fact | Profile fields |
+| --- | --- | --- |
+| Indigo | Interest | interests |
+| Coral | Budget | budget |
+| Amber | Concern | objections, a falling score |
+| Sage | Intent | lead stage, a rising score |
+
+The marks in a message are the scripted evidence for that turn's patch. The marks in a draft are the sentences the composer wrote from each field.
+
+### Type and layout
+
+- **Two typefaces.** Inter is used for everything inside the product, including page titles, messages, tables and controls. Fraunces is kept for the landing page's headlines.
+- **One scale.** Reading text is 16 px, product content 15 px, labels 14 px and metadata 13 px. Timestamps and counters are 12 px, and a browser test fails on any visible text below that.
+- **One focal point per screen.** Overview leads with *Up next*. Conversations gives the dialogue the width, with the inbox column only on wide screens. Campaigns puts the selected draft and its approval first.
+- **Details one step away.** On Campaigns, the funnel always shows the audience rules; the controls that change them sit under **Audience rules**. A draft lists the profile fields it used by name; pointing at one, or focusing it with the keyboard, says how it shaped the draft and marks the sentence it wrote. On the landing page, the six business rules sit under one expandable row.
+
 ## The scenario
 
 **Studio Halden** is a fictional brand and packaging studio for food and drink makers, with prices in euros and the Lisbon timezone. Its catalog has six products, from a free packaging audit to a €6,500 website kit. The persona, **Mira**, answers from that catalog.
@@ -36,7 +58,9 @@ Several customers show the rules at work:
 | Camille Roux | Last seen 41 days ago: the only match for "last seen more than 30 days ago". |
 | Marta Kowalska, Jonas Weber | Lost and won customers, outside the campaign's stages. |
 
-![The demo's customer table: twelve fictional customers with stage, score, interests, budget, channel and consent](assets/showcase-customers.webp)
+![The demo's customer table: twelve fictional customers with stage filters and counts, a stage track, interests, budget and the next step for each](assets/showcase-customers.webp)
+
+![The workspace overview: what needs attention next, and the pipeline with one avatar per customer](assets/showcase-overview.webp)
 
 Every person in the demo is invented:
 - **Emails** use the reserved `example.com` domain.
@@ -53,7 +77,7 @@ No record comes from a real database or from the repository's history.
 | 3 | "Our last studio took four months…" | objection **timeline: last studio took four months**; score → 18 |
 | 4 | "Could you email me the packaging plan…?" | stage → **proposal**; score → 33; a note that she prefers email |
 
-Each changed field links back to the words it came from. The quotes are exact substrings of her message, and a unit test checks this.
+Each changed field links back to the words it came from, and following a link lights up those words in the conversation. The quotes are exact substrings of her message, and a unit test checks this.
 
 Turn 1 qualifies her for the January campaign: her stage becomes qualified and she now has a packaging interest. That campaign's draft for her then uses:
 - her budget: the €3,900 system fits;
@@ -74,6 +98,13 @@ Turn 1 qualifies her for the January campaign: her stage becomes qualified and s
 | Consent switch in a customer's drawer | `PATCH /business/{id}/customers/{id}` | **Yes**: the opt-in timestamp is set or cleared, and the customer leaves segments and exports. |
 | CSV export and preview | `GET /outbox/export.csv` | **Yes**: same rows, columns and formula guard. |
 
+## The landing page
+
+The landing page shows the product rather than describing it:
+1. **The hero** is a window onto the workspace that replays Ines's conversation. Each frame is the reducer's output from the starting workspace, rendered by the same components as the app, and labelled *Scripted demo replay*. It runs in its own state, so it never changes your workspace. With reduced motion it does not play; it opens on its last frame and the steps underneath move through it.
+2. **Three acts** (conversation, memory, campaign) run on your own workspace. When the first act scrolls into view, Ines's first message is read, exactly as if you had pressed Play; with reduced motion nothing happens until you press it. What you do there (play, write drafts, approve, export) carries over into the app.
+3. **One figure** of the backend, and the rules the code enforces.
+
 ### Behaviour that only exists in the demo
 
 1. **Generate drafts** writes drafts only for recipients without one. The backend writes a new draft on every call.
@@ -83,6 +114,7 @@ Turn 1 qualifies her for the January campaign: her stage becomes qualified and s
 5. **The downloaded CSV** starts with a UTF-8 byte-order mark so spreadsheet apps read the umlauts. The backend's file has no BOM.
 6. **Customer search** also matches the company name. The backend searches name, email, phone and external id.
 7. **State** lives in the browser's `localStorage`. **Reset demo** restores the start.
+8. **Pacing.** A played turn shows her message, then the scripted reply, then commits the profile change, with short pauses in between. There is no typing indicator and no word-by-word streaming, because nothing is generated. (The backend does stream replies over its WebSocket.)
 
 ## What "marked as sent" means
 
@@ -101,12 +133,12 @@ The tour has 10 steps. It moves through the real screens and uses the real demo 
 
 ## Video
 
-The README video (about 57 seconds, 1920×1080, 30 fps, H.264) was recorded by `showcase/scripts/record-demo.mjs`:
+The README video (about 54 seconds, 1920×1080, 30 fps, H.264) was recorded by `showcase/scripts/record-demo.mjs`:
 1. Playwright drives the production build.
 2. The Chrome DevTools screencast captures every frame with its timestamp.
 3. FFmpeg resamples the frames to a constant 30 fps.
 
-Two things are drawn on top for the video only: a round pointer, because headless browsers have no cursor, and the closing card. The playback timing is the app's own presentation timing. Nothing is sped up or generated.
+Three things are drawn on top for the video only: a round pointer, because headless browsers have no cursor, short chapter captions, and the closing card. The playback timing is the app's own presentation timing. Nothing is sped up or generated.
 
 ```bash
 cd showcase

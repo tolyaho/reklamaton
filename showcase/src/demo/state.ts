@@ -14,7 +14,7 @@ import {
 } from "./engine"
 import type { Business, DemoState, OutboundMessage, Segment } from "./types"
 
-export const STATE_VERSION = 3
+export const STATE_VERSION = 4
 
 export type Action =
   | { type: "playTurn"; chatId: number }

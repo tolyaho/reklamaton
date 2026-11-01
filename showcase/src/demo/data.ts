@@ -209,7 +209,7 @@ export const inesScript: ScriptTurn[] = [
     evidence: {
       language: "We're opening a second Calder Bakehouse",
       tone: "Hi!",
-      interests: "our pastry boxes look tired. Do you do packaging?",
+      interests: "our pastry boxes look tired",
       location: "in Porto",
       lead_stage: "Do you do packaging?",
       lead_score: "Do you do packaging?",

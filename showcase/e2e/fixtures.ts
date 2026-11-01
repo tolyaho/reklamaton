@@ -28,8 +28,9 @@ export const test = base.extend<{ guard: { external: string[]; errors: string[] 
 
 export { expect }
 
+/** Starts from the initial workspace. Clears storage on an app page, where nothing plays by itself. */
 export async function fresh(page: Page, path = "/app/overview") {
-  await page.goto(path)
+  await page.goto("/app/overview")
   await page.evaluate(() => localStorage.clear())
   await page.goto(path)
 }

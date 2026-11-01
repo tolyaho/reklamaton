@@ -146,6 +146,8 @@ export interface DraftFactor {
   field: ProfileField | "name" | "channel"
   label: string
   effect: string
+  /** The exact sentence of the draft this field produced, when it produced one. */
+  text?: string
 }
 
 export interface OutboundMessage {

@@ -162,7 +162,7 @@ function TourOverlay({ step, goTo, stop }: { step: number; goTo: (n: number) => 
         aria-describedby="tour-body"
         data-testid="tour-panel"
         className={cx(
-          "fixed z-[45] w-auto rounded-panel border border-line bg-surface/95 p-4 shadow-pop backdrop-blur-md sm:w-[380px] sm:p-5",
+          "fixed z-[45] w-auto rounded-panel border border-line bg-surface/95 p-5 shadow-pop backdrop-blur-md sm:w-[400px] sm:p-6",
           "inset-x-2 bottom-2 sm:inset-x-auto sm:bottom-5",
           placeLeft ? "sm:left-5 lg:left-[276px]" : "sm:right-5",
         )}
@@ -183,22 +183,22 @@ function TourOverlay({ step, goTo, stop }: { step: number; goTo: (n: number) => 
             <X className="size-4" />
           </button>
         </div>
-        <div className="mt-2 flex gap-1" aria-hidden>
+        <div className="mt-3 flex gap-1" aria-hidden>
           {TOUR_STEPS.map((s, i) => (
             <span key={s.id} className={cx("h-1 flex-1 rounded-full transition-colors duration-300", i <= step ? "bg-coral" : "bg-line")} />
           ))}
         </div>
-        <h2 id="tour-title" ref={headingRef} tabIndex={-1} className="mt-3 font-display text-[19px] leading-snug font-semibold text-ink outline-none">
+        <h2 id="tour-title" ref={headingRef} tabIndex={-1} className="mt-4 text-[19px] leading-snug font-semibold tracking-[-0.012em] text-ink outline-none">
           {current.title}
         </h2>
-        <p id="tour-body" aria-live="polite" className="mt-1.5 text-[13.5px] leading-relaxed text-ink-2">
+        <p id="tour-body" aria-live="polite" className="mt-2 text-ui text-ink-2">
           {current.body}
         </p>
 
         {current.action && (
-          <div className="mt-3">
+          <div className="mt-4">
             {complete ? (
-              <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-sage">
+              <span className="inline-flex items-center gap-1.5 text-label font-medium text-sage">
                 <Check className="size-4" aria-hidden /> Done
               </span>
             ) : (
@@ -210,7 +210,7 @@ function TourOverlay({ step, goTo, stop }: { step: number; goTo: (n: number) => 
           </div>
         )}
 
-        <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="mt-5 flex items-center justify-between gap-2">
           <Button variant="ghost" size="sm" onClick={() => goTo(step - 1)} disabled={step === 0}>
             <ArrowLeft aria-hidden /> Back
           </Button>

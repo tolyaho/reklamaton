@@ -36,15 +36,16 @@ npm run test:e2e     # Playwright against the production build
 The browser tests fail on:
 - any console error;
 - any request that leaves the local server, which also means no backend and no OpenAI;
-- horizontal overflow at 390, 768, 1024, 1280, 1440 and 1920 px.
+- horizontal overflow at 390, 768, 1024, 1280, 1440 and 1920 px;
+- visible text smaller than 12 px.
 
 ## Layout
 
 | Path | What it holds |
 | --- | --- |
-| `src/demo/` | Demo state and rules. `data.ts` is the synthetic workspace. `engine.ts` ports the backend's merge, segment and approval rules. `compose.ts` is the draft composer. `prompt.ts` ports `prompter.py`. `csv.ts` builds the export. `state.ts` is the reducer. |
+| `src/demo/` | Demo state and rules. `data.ts` is the synthetic workspace. `engine.ts` ports the backend's merge, segment and approval rules. `compose.ts` is the draft composer. `prompt.ts` ports `prompter.py`. `csv.ts` builds the export. `state.ts` is the reducer. `facts.ts` traces each fact from message to profile to draft. |
 | `src/app/` | The workspace screens: Overview, Conversations, Customers, Campaigns and Business. |
-| `src/landing/` | The landing page. |
+| `src/landing/` | The landing page: the hero replay (`reel.ts`, `HeroReel.tsx`) and the three acts (`Acts.tsx`). |
 | `src/tour/` | The guided tour. |
 | `e2e/` | Playwright tests. |
 | `scripts/record-demo.mjs` | The screen recording used for the README video. |

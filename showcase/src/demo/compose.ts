@@ -108,6 +108,7 @@ export function composeDraft(
     field: "tone",
     label: `Tone · ${profile.tone ?? "not detected"}`,
     effect: profile.tone ? `Opens with “${greeting}”` : "Defaults to a friendly greeting",
+    text: greeting,
   })
   if (requested !== "en") {
     factors.push({
@@ -131,16 +132,16 @@ export function composeDraft(
     profile.interests[0]
   if (topic) {
     const phrase = INTEREST_PHRASES[topic]?.[lang] ?? (lang === "de" ? `Ihrem Projekt (${topic})` : topic)
-    sentences.push(
+    const hook =
       lang === "de"
         ? profile.lead_stage === "proposal"
           ? `ich melde mich noch einmal zu ${phrase}.`
           : `Sie hatten nach ${phrase} gefragt, daher eine kurze Nachricht.`
         : profile.lead_stage === "proposal"
           ? `Following up on ${phrase}.`
-          : `A quick note since you asked about ${phrase.replace(/^your /, "")}.`,
-    )
-    factors.push({ field: "interests", label: `Interest · ${topic}`, effect: "Opening line refers to it" })
+          : `A quick note since you asked about ${phrase.replace(/^your /, "")}.`
+    sentences.push(hook)
+    factors.push({ field: "interests", label: `Interest · ${topic}`, effect: "Opening line refers to it", text: hook })
   }
 
   // Offer, verbatim (or its fixed translation).
@@ -151,30 +152,29 @@ export function composeDraft(
   const price = product ? productPrice(product) : null
   if (product && price != null && profile.budget_max != null) {
     if (profile.budget_max >= price) {
-      sentences.push(
-        lang === "de"
-          ? `Mit ${eur(price, "de")} passt das in Ihr Budget.`
-          : `At ${eur(price, "en")}, it fits the budget you mentioned.`,
-      )
+      const fit = lang === "de" ? `Mit ${eur(price, "de")} passt das in Ihr Budget.` : `At ${eur(price, "en")}, it fits the budget you mentioned.`
+      sentences.push(fit)
       factors.push({
         field: "budget",
         label: `Budget · up to ${eur(profile.budget_max, "en")}`,
         effect: `Says the ${eur(price, "en")} ${product.name.toLowerCase()} fits`,
+        text: fit,
       })
     } else {
       const smaller = business.products
         .filter((p) => p !== product && (productPrice(p) ?? Infinity) <= profile.budget_max!)
         .find((p) => p.name === "Label refresh" && profile.interests.includes("labels"))
       if (smaller) {
-        sentences.push(
+        const alt =
           lang === "de"
             ? `Falls das mehr ist als geplant: Der Label-Refresh (${eur(productPrice(smaller)!, "de")}) ist die kleinere Option.`
-            : `If that is more than you planned, the label refresh (${eur(productPrice(smaller)!, "en")}) is the smaller option.`,
-        )
+            : `If that is more than you planned, the label refresh (${eur(productPrice(smaller)!, "en")}) is the smaller option.`
+        sentences.push(alt)
         factors.push({
           field: "budget",
           label: `Budget · up to ${eur(profile.budget_max, "en")}`,
           effect: "Below the offer price, so it points to the label refresh",
+          text: alt,
         })
       }
     }
@@ -185,7 +185,7 @@ export function composeDraft(
     const answer = OBJECTION_ANSWERS.find((a) => a.match.test(objection))
     if (answer) {
       sentences.push(answer[lang])
-      factors.push({ field: "objections", label: `Objection · ${answer.field}`, effect: "Answered before the ask" })
+      factors.push({ field: "objections", label: `Objection · ${answer.field}`, effect: "Answered before the ask", text: answer[lang] })
       break
     }
   }
@@ -208,6 +208,7 @@ export function composeDraft(
     field: "lead_stage",
     label: `Stage · ${profile.lead_stage}`,
     effect: profile.lead_stage === "proposal" ? "Asks to hold a slot" : tone === "short" ? "One-word reply ask" : "Invites a first call",
+    text: cta,
   })
 
   // Sign-off by channel.
